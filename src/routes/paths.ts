@@ -1,0 +1,44 @@
+export const paths = {
+  public: {
+    login: "/login",
+    register: "/register",
+    unauthorized: "/unauthorized",
+  },
+
+  auth: {
+    changePassword: "/change-password",
+    forgotPassword: "/forgot-password",
+    resetPassword: "/reset-password",
+  },
+
+  entrepreneur: {
+    dashboard: "/dashboard",
+    profile: "/dashboard/profile",
+    editProfile: "/dashboard/profile/edit",
+    businesses: "/dashboard/businesses",
+    businessDetail: "/dashboard/businesses/:id",
+    editBusiness: "/dashboard/businesses/:id/edit",
+    newBusiness: "/dashboard/businesses/new",
+    products: "/dashboard/products",
+    productDetail: "/dashboard/products/:id",
+    editProduct: "/dashboard/products/:id/edit",
+    productImages: "/dashboard/products/:id/images",
+    newProduct: "/dashboard/products/new",
+  },
+
+  admin: {
+    dashboard: "/admin",
+    users: "/admin/users",
+    userDetail: "/admin/users/:id",
+    entrepreneurs: "/admin/entrepreneurs",
+    entrepreneurDetail: "/admin/entrepreneurs/:id",
+    businesses: "/admin/businesses",
+    businessDetail: "/admin/businesses/:id",
+    products: "/admin/products",
+    productDetail: "/admin/products/:id",
+    categories: "/admin/categories",
+    newCategory: "/admin/categories/new",
+    editCategory: "/admin/categories/:id/edit",
+    approvals: "/admin/approvals",
+  },
+} as const;
