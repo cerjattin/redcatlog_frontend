@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -56,7 +56,7 @@ export function EditMyProductPage() {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -72,8 +72,8 @@ export function EditMyProductPage() {
     },
   });
 
-  const hasPrice = watch("hasPrice");
-  const managesStock = watch("managesStock");
+  const hasPrice = useWatch({ control, name: "hasPrice" });
+  const managesStock = useWatch({ control, name: "managesStock" });
 
   useEffect(() => {
     async function loadProduct() {

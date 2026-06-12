@@ -1,6 +1,5 @@
 import {
   createBrowserRouter,
-  Navigate,
   RouterProvider,
 } from "react-router-dom";
 
@@ -37,6 +36,10 @@ import { AdminUserDetailPage } from "@/features/admin/users/pages/AdminUserDetai
 import { ChangePasswordPage } from "@/features/auth/pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
+import { HomePage } from "@/features/public/pages/HomePage";
+import { CatalogPage } from "@/features/public/pages/CatalogPage";
+import { EntrepreneursPage } from "@/features/public/pages/EntrepreneursPage";
+import { GalleryPage } from "@/features/public/pages/GalleryPage";
 
 const adminRoles = ["admin", "super_admin"] as const;
 
@@ -44,8 +47,20 @@ const entrepreneurRoles = ["entrepreneur", "emprendedora"] as const;
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Navigate to={paths.public.login} replace />,
+    path: paths.public.home,
+    element: <HomePage />,
+  },
+  {
+    path: paths.public.entrepreneurs,
+    element: <EntrepreneursPage />,
+  },
+  {
+    path: paths.public.gallery,
+    element: <GalleryPage />,
+  },
+  {
+    path: paths.public.catalog,
+    element: <CatalogPage />,
   },
   {
     path: paths.public.login,

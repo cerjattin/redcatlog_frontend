@@ -1,5 +1,5 @@
 import { Archive, Check, Eye, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -52,13 +52,14 @@ export function AdminBusinessesPage() {
     null,
   );
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadBusinesses() {
+  const loadBusinesses = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -66,7 +67,7 @@ export function AdminBusinessesPage() {
       const response = await adminBusinessService.listBusinesses({
         page,
         limit: 10,
-        search,
+        search: appliedSearch,
         status,
       });
 
@@ -77,15 +78,15 @@ export function AdminBusinessesPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [appliedSearch, page, status]);
 
   useEffect(() => {
     void loadBusinesses();
-  }, [page, status]);
+  }, [loadBusinesses]);
 
   async function handleSearch() {
+    setAppliedSearch(search);
     setPage(1);
-    await loadBusinesses();
   }
 
   async function handleApprove(businessId: string) {

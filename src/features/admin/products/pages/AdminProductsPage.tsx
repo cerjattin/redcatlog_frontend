@@ -1,5 +1,5 @@
 import { Archive, Check, Eye, Search, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Loader } from "@/components/feedback/Loader";
@@ -49,6 +49,7 @@ export function AdminProductsPage() {
     null,
   );
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +57,7 @@ export function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -64,7 +65,7 @@ export function AdminProductsPage() {
       const response = await adminProductService.listProducts({
         page,
         limit: 10,
-        search,
+        search: appliedSearch,
         status,
       });
 
@@ -75,15 +76,15 @@ export function AdminProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [appliedSearch, page, status]);
 
   useEffect(() => {
     void loadProducts();
-  }, [page, status]);
+  }, [loadProducts]);
 
   async function handleSearch() {
+    setAppliedSearch(search);
     setPage(1);
-    await loadProducts();
   }
 
   async function handleApprove(productId: string) {

@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, Store, UserX, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -62,7 +62,7 @@ export function AdminEntrepreneurDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadEntrepreneur() {
+  const loadEntrepreneur = useCallback(async () => {
     if (!params.id) {
       setError("No se encontró el identificador de la emprendedora.");
       setIsLoading(false);
@@ -84,11 +84,11 @@ export function AdminEntrepreneurDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [params.id]);
 
   useEffect(() => {
     void loadEntrepreneur();
-  }, [params.id]);
+  }, [loadEntrepreneur]);
 
   async function handleApprove() {
     if (!entrepreneur) {

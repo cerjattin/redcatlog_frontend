@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -50,7 +50,7 @@ export function CategoryFormPage() {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<CategoryFormValues>({
@@ -67,7 +67,7 @@ export function CategoryFormPage() {
     },
   });
 
-  const name = watch("name");
+  const name = useWatch({ control, name: "name" });
 
   const parentOptions = useMemo(
     () => categories.filter((category) => category.id !== params.id),

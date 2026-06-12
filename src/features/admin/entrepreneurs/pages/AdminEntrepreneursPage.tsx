@@ -1,5 +1,5 @@
 import { Check, Eye, Search, UserX, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -57,6 +57,7 @@ export function AdminEntrepreneursPage() {
     useState<AdminEntrepreneurPagination | null>(null);
 
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState<EntrepreneurStatus | "">("");
   const [page, setPage] = useState(1);
 
@@ -64,7 +65,7 @@ export function AdminEntrepreneursPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadEntrepreneurs() {
+  const loadEntrepreneurs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -72,7 +73,7 @@ export function AdminEntrepreneursPage() {
       const response = await adminEntrepreneurService.listEntrepreneurs({
         page,
         limit: 10,
-        search,
+        search: appliedSearch,
         status,
       });
 
@@ -83,15 +84,15 @@ export function AdminEntrepreneursPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [appliedSearch, page, status]);
 
   useEffect(() => {
     void loadEntrepreneurs();
-  }, [page, status]);
+  }, [loadEntrepreneurs]);
 
   async function handleSearch() {
+    setAppliedSearch(search);
     setPage(1);
-    await loadEntrepreneurs();
   }
 
   async function handleApprove(entrepreneurId: string) {

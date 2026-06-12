@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, ImageOff, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -57,7 +57,7 @@ export function AdminBusinessDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadBusiness() {
+  const loadBusiness = useCallback(async () => {
     if (!params.id) {
       setError("No se encontró el identificador del emprendimiento.");
       setIsLoading(false);
@@ -77,11 +77,11 @@ export function AdminBusinessDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [params.id]);
 
   useEffect(() => {
     void loadBusiness();
-  }, [params.id]);
+  }, [loadBusiness]);
 
   async function handleApprove() {
     if (!business) {

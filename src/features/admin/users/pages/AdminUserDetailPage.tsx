@@ -6,7 +6,7 @@ import {
   UserX,
   KeyRound,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -87,7 +87,7 @@ export function AdminUserDetailPage() {
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  async function loadUser() {
+  const loadUser = useCallback(async () => {
     if (!params.id) {
       setError("No se encontró el identificador del usuario.");
       setIsLoading(false);
@@ -107,11 +107,11 @@ export function AdminUserDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [params.id]);
 
   useEffect(() => {
     void loadUser();
-  }, [params.id]);
+  }, [loadUser]);
 
   async function handleStatusChange(status: UserStatus) {
     if (!user) {

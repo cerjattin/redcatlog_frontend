@@ -1,5 +1,5 @@
 import { Edit, Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -35,19 +35,20 @@ export function AdminCategoriesPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [type, setType] = useState<CategoryType | "">("");
   const [isActive, setIsActive] = useState<"true" | "false" | "">("");
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadCategories() {
+  const loadCategories = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
       const data = await categoryService.listCategories({
-        search,
+        search: appliedSearch,
         type: type || undefined,
         isActive: isActive || undefined,
       });
@@ -58,14 +59,14 @@ export function AdminCategoriesPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [appliedSearch, isActive, type]);
 
   useEffect(() => {
     void loadCategories();
-  }, [type, isActive]);
+  }, [loadCategories]);
 
   async function handleSearch() {
-    await loadCategories();
+    setAppliedSearch(search);
   }
 
   async function handleToggleStatus(category: Category) {

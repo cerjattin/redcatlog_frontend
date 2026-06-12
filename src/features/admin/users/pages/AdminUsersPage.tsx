@@ -1,5 +1,5 @@
 import { Ban, Eye, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -68,6 +68,7 @@ export function AdminUsersPage() {
   );
 
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState<UserStatus | "">("");
   const [role, setRole] = useState("");
   const [page, setPage] = useState(1);
@@ -76,7 +77,7 @@ export function AdminUsersPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -84,7 +85,7 @@ export function AdminUsersPage() {
       const response = await adminUserService.listUsers({
         page,
         limit: 10,
-        search,
+        search: appliedSearch,
         status,
         role,
       });
@@ -96,15 +97,15 @@ export function AdminUsersPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [appliedSearch, page, role, status]);
 
   useEffect(() => {
     void loadUsers();
-  }, [page, status, role]);
+  }, [loadUsers]);
 
   async function handleSearch() {
+    setAppliedSearch(search);
     setPage(1);
-    await loadUsers();
   }
 
   async function handleQuickStatusChange(

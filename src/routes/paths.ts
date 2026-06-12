@@ -1,5 +1,9 @@
 export const paths = {
   public: {
+    home: "/",
+    entrepreneurs: "/entrepreneurs",
+    catalog: "/catalog",
+    gallery: "/gallery",
     login: "/login",
     register: "/register",
     unauthorized: "/unauthorized",
