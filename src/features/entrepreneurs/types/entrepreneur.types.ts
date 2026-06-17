@@ -40,7 +40,7 @@ export type EntrepreneurProfile = {
   businesses?: EntrepreneurBusinessSummary[];
 };
 
-export type UpdateEntrepreneurProfileRequest = {
+export type CreateEntrepreneurProfileRequest = {
   documentType?: string;
   documentNumber?: string;
   personalStory?: string;
@@ -50,3 +50,5 @@ export type UpdateEntrepreneurProfileRequest = {
   department?: string;
   country?: string;
 };
+
+export type UpdateEntrepreneurProfileRequest = CreateEntrepreneurProfileRequest;

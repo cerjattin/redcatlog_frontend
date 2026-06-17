@@ -1,44 +1,84 @@
-import { MapPin, Search, SlidersHorizontal, Tag } from "lucide-react";
-import { useMemo, useState } from "react";
+import axios from "axios";
+import {
+  AlertCircle,
+  MapPin,
+  MessageCircle,
+  Package,
+  Search,
+  Store,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
 import { PublicPagination } from "@/features/public/components/PublicPagination";
-import { PublicFooter, PublicHeader } from "@/features/public/pages/HomePage";
-import { cn } from "@/utils/cn";
+import { publicBusinessService } from "@/features/public/api/publicBusiness.service";
+import {
+  PublicFooter,
+  PublicHeader,
+} from "@/features/public/components/PublicLayout";
+import { PublicSocialLinks } from "@/features/public/components/PublicSocialLinks";
 
-type Category = "Todas las emprendedoras" | "Artesanías" | "Gastronomía" | "Belleza" | "Moda";
+import type {
+  PublicBusiness,
+  PublicBusinessesPagination,
+} from "@/features/public/types/publicBusiness.types";
+import {
+  buildPublicBusinessWhatsappUrl,
+  getPublicBusinessBannerUrl,
+  getPublicBusinessCategoryName,
+  getPublicBusinessDescription,
+  getPublicBusinessLocation,
+  getPublicBusinessLogoUrl,
+  getPublicBusinessProductsCount,
+} from "@/features/public/utils/businessDisplay";
 
-type Entrepreneur = {
-  category: Exclude<Category, "Todas las emprendedoras">;
-  city: string;
-  name: string;
-  description: string;
-  products: number;
-  image: string;
-};
+const PAGE_SIZE = 12;
 
-const entrepreneurs: Entrepreneur[] = [
-  { category: "Artesanías", city: "Bogotá", name: "Hilos de Esperanza", description: "Tejidos tradicionales que cuentan historias de superación y creatividad.", products: 45, image: "/entrepreneurs/hilos-esperanza.jpg" },
-  { category: "Gastronomía", city: "Medellín", name: "Raíces Creativas", description: "Sabores tradicionales preparados con recetas de familia y mucho amor.", products: 32, image: "/entrepreneurs/raices-creativas.jpg" },
-  { category: "Belleza", city: "Cali", name: "Esencia Natural", description: "Productos de belleza naturales elaborados con ingredientes orgánicos.", products: 28, image: "/entrepreneurs/esencia-natural.jpg" },
-  { category: "Artesanías", city: "Cartagena", name: "Colores del Alma", description: "Cerámicas pintadas a mano con diseños únicos inspirados en la costa.", products: 52, image: "/entrepreneurs/colores-alma.jpg" },
-  { category: "Moda", city: "Bucaramanga", name: "Tejiendo Sueños", description: "Moda sostenible con textiles tradicionales y diseños contemporáneos.", products: 38, image: "/entrepreneurs/tejiendo-suenos.jpg" },
-  { category: "Belleza", city: "Barranquilla", name: "Joyas del Corazón", description: "Joyería artesanal hecha con materiales de joyas y piedras naturales.", products: 41, image: "/entrepreneurs/joyas-corazon.jpg" },
-  { category: "Artesanías", city: "Pereira", name: "Sabor de Casa", description: "Productos gastronómicos artesanales que rescatan tradiciones culinarias.", products: 25, image: "/entrepreneurs/sabor-casa.jpg" },
-  { category: "Artesanías", city: "Manizales", name: "Arte en Madera", description: "Decoración en madera tallada a mano con motivos tradicionales.", products: 36, image: "/entrepreneurs/arte-madera.jpg" },
-  { category: "Artesanías", city: "Santa Marta", name: "Canastas y Más", description: "Productos tejidos en fibras naturales para el hogar.", products: 44, image: "/entrepreneurs/canastas-mas.jpg" },
-];
+function getApiErrorMessage(error: unknown) {
+  console.error("Error cargando emprendimientos públicos:", error);
 
-const categories: Category[] = ["Todas las emprendedoras", "Artesanías", "Gastronomía", "Belleza", "Moda"];
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const data = error.response?.data as { message?: string } | undefined;
+
+    if (!error.response) {
+      return "No hay conexión con el backend. Verifica que el servidor esté corriendo en http://localhost:4000.";
+    }
+
+    if (status === 404) {
+      return "El backend todavía no tiene disponible el endpoint público de emprendimientos: /api/public/businesses.";
+    }
+
+    return (
+      data?.message ??
+      `No fue posible cargar los emprendimientos. Código HTTP: ${status}.`
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "No fue posible cargar los emprendimientos.";
+}
 
 function EntrepreneursHero() {
   return (
-    <section className="px-5 pb-14 pt-10 md:pb-14 md:pt-6">
-      <div className="mx-auto flex max-w-[960px] flex-col items-center justify-center gap-7 text-center md:flex-row md:text-left">
-        <img src="/entrepreneurs/entrepreneurs-hero.png" alt="" className="h-[185px] w-[245px] object-contain md:h-[230px] md:w-[285px]" />
-        <div>
-          <h1 className="text-[42px] font-bold leading-tight text-[#211734] sm:text-5xl md:text-[56px]">Emprendedoras</h1>
-          <p className="mt-3 max-w-[650px] text-lg leading-[1.35] text-[#6d6383] md:text-2xl">
-            Conoce las marcas y negocios de mujeres extraordinarias que están transformando sus vidas
+    <section className="px-5 pb-14 pt-12 md:pb-20 md:pt-16">
+      <div className="mx-auto flex max-w-[1224px] flex-col items-center justify-center gap-7 text-center md:flex-row md:text-left">
+        <div className="flex h-[190px] w-[230px] items-center justify-center rounded-[48px] bg-[#fff0ea] md:h-[230px] md:w-[270px]">
+          <Users className="h-24 w-24 text-[#ff9f82]" />
+        </div>
+
+        <div className="min-w-0 max-w-full">
+          <h1 className="max-w-full break-words text-[38px] font-bold leading-tight text-[#211734] sm:text-5xl md:text-[56px]">
+            Emprendimientos de la Red
+          </h1>
+
+          <p className="mt-3 max-w-2xl text-lg text-[#6d6383] md:text-2xl">
+            Conoce marcas creadas por mujeres emprendedoras y apoya sus
+            productos, historias y procesos.
           </p>
         </div>
       </div>
@@ -46,44 +86,170 @@ function EntrepreneursHero() {
   );
 }
 
-function EntrepreneursControls({ query, category, onQueryChange, onCategoryChange }: {
+function EntrepreneursControls({
+  query,
+  onQueryChange,
+  onSearch,
+  onClear,
+}: {
   query: string;
-  category: Category;
   onQueryChange: (value: string) => void;
-  onCategoryChange: (value: Category) => void;
+  onSearch: () => void;
+  onClear: () => void;
 }) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSearch();
+  }
+
   return (
     <div className="mx-auto max-w-[1224px] px-5 lg:px-0">
-      <div className="flex gap-4">
-        <label className="flex h-14 flex-1 items-center gap-4 rounded-full border border-[#cfc5df] bg-white px-5 text-[#3a2467]">
+      <form onSubmit={handleSubmit} className="flex gap-4">
+        <label className="flex h-14 flex-1 items-center gap-4 rounded-full border border-[#cfc5df] bg-white px-5 text-[#6d6383]">
           <Search size={22} />
-          <input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar emprendedoras o marcas..." className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8e80aa]" />
+
+          <input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Buscar emprendimientos, ciudades o categorías..."
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8e80aa]"
+          />
         </label>
-        <button type="button" className="hidden h-14 items-center gap-3 rounded-full border border-[#cfc5df] bg-white px-6 text-sm font-medium text-[#6d6383] sm:flex">
-          Filtros <SlidersHorizontal size={21} />
+
+        <button
+          type="submit"
+          className="hidden h-14 rounded-full border border-[#cfc5df] bg-white px-6 text-sm font-medium text-[#6d6383] transition hover:border-[#d66eff] hover:text-[#3a2467] sm:block"
+        >
+          Buscar
         </button>
-      </div>
-      <div className="mt-6 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {categories.map((item) => (
-          <button key={item} type="button" onClick={() => onCategoryChange(item)} className={cn("shrink-0 rounded-full border px-6 py-3 text-sm font-medium transition", category === item ? "border-[#ff9f82] bg-[#ff9f82] text-white" : "border-[#cfc5df] bg-white text-[#6d6383] hover:border-[#d66eff]")}>{item}</button>
-        ))}
-      </div>
+
+        <button
+          type="button"
+          onClick={onClear}
+          className="hidden h-14 rounded-full border border-[#cfc5df] bg-white px-6 text-sm font-medium text-[#6d6383] transition hover:border-[#d66eff] hover:text-[#3a2467] sm:block"
+        >
+          Limpiar
+        </button>
+      </form>
     </div>
   );
 }
 
-function EntrepreneurCard({ entrepreneur }: { entrepreneur: Entrepreneur }) {
+function BusinessSocialLinks({ business }: { business: PublicBusiness }) {
   return (
-    <article className="overflow-hidden rounded-[24px] bg-white">
-      <img src={entrepreneur.image} alt={entrepreneur.name} className="h-[240px] w-full object-cover sm:h-[288px]" />
-      <div className="flex min-h-[230px] flex-col px-6 pb-8 pt-6">
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="rounded-full bg-[#ff88ac]/20 px-3 py-1.5 text-[#d14e75]">{entrepreneur.category}</span>
-          <span className="flex items-center gap-1.5 text-[#698ae5]"><MapPin size={15} /> {entrepreneur.city}</span>
+    <PublicSocialLinks
+      className="mt-5"
+      facebookUrl={business.facebookUrl}
+      instagramUrl={business.instagramUrl}
+      tiktokUrl={business.tiktokUrl}
+    />
+  );
+}
+
+function BusinessCard({ business }: { business: PublicBusiness }) {
+  const bannerUrl = getPublicBusinessBannerUrl(business);
+  const logoUrl = getPublicBusinessLogoUrl(business);
+  const description = getPublicBusinessDescription(business);
+  const categoryName = getPublicBusinessCategoryName(business);
+  const location = getPublicBusinessLocation(business);
+  const productsCount = getPublicBusinessProductsCount(business);
+  const whatsappUrl = buildPublicBusinessWhatsappUrl(business);
+
+  return (
+    <article className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(58,36,103,0.08)]">
+      <div className="relative h-52 bg-[#f7eef8]">
+        {bannerUrl ? (
+          <img
+            src={bannerUrl}
+            alt={`Banner de ${business.name}`}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Store className="h-20 w-20 text-[#dcbdd8]" />
+          </div>
+        )}
+
+        <span className="absolute left-5 top-5 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-[#3a2467] shadow-sm">
+          {categoryName}
+        </span>
+      </div>
+
+      <div className="relative px-6 pb-8 pt-12">
+        <div className="absolute -top-10 left-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-md">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`Logo de ${business.name}`}
+              className="h-full w-full object-contain p-2"
+            />
+          ) : (
+            <Store className="h-9 w-9 text-[#ff9f82]" />
+          )}
         </div>
-        <h2 className="mt-3 text-[25px] font-semibold leading-tight text-[#3a2467] md:text-[28px]">{entrepreneur.name}</h2>
-        <p className="mt-2 text-base leading-[1.35] text-[#6d6383]">{entrepreneur.description}</p>
-        <p className="mt-auto flex items-center gap-2 pt-5 text-base text-[#ff709b]"><Tag size={15} /> {entrepreneur.products} productos disponibles</p>
+
+        <h2 className="text-2xl font-bold text-[#211734]">{business.name}</h2>
+
+        {business.entrepreneur?.fullName ? (
+          <p className="mt-1 text-sm font-medium text-[#8e80aa]">
+            Por {business.entrepreneur.fullName}
+          </p>
+        ) : null}
+
+        <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#6d6383]">
+          {description}
+        </p>
+
+        <div className="mt-5 grid gap-2 text-sm text-[#6d6383]">
+          {location ? (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#ff9f82]" />
+              <span>{location}</span>
+            </div>
+          ) : null}
+
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-[#ff9f82]" />
+            <span>
+              {productsCount === 1
+                ? "1 producto publicado"
+                : `${productsCount} productos publicados`}
+            </span>
+          </div>
+        </div>
+
+        <BusinessSocialLinks business={business} />
+
+        {whatsappUrl ? (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35c46a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2ead5c]"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Contactar por WhatsApp
+          </a>
+        ) : (
+          <div className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#6d6383]/15 px-5 py-3 text-sm font-bold text-[#6d6383]">
+            Contacto no disponible
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function BusinessCardSkeleton() {
+  return (
+    <article className="overflow-hidden rounded-[28px] bg-white">
+      <div className="h-52 animate-pulse bg-[#f3edf7]" />
+
+      <div className="space-y-4 px-6 pb-8 pt-12">
+        <div className="h-7 w-52 animate-pulse rounded-xl bg-[#f3edf7]" />
+        <div className="h-5 w-40 animate-pulse rounded-xl bg-[#f3edf7]" />
+        <div className="h-20 w-full animate-pulse rounded-xl bg-[#f3edf7]" />
+        <div className="h-12 w-full animate-pulse rounded-full bg-[#f3edf7]" />
       </div>
     </article>
   );
@@ -91,35 +257,130 @@ function EntrepreneurCard({ entrepreneur }: { entrepreneur: Entrepreneur }) {
 
 export function EntrepreneursPage() {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<Category>("Todas las emprendedoras");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
 
-  const visibleEntrepreneurs = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("es");
-    return entrepreneurs.filter((entrepreneur) => {
-      const matchesCategory = category === "Todas las emprendedoras" || entrepreneur.category === category;
-      const matchesQuery = !normalizedQuery || `${entrepreneur.name} ${entrepreneur.city} ${entrepreneur.description}`.toLocaleLowerCase("es").includes(normalizedQuery);
-      return matchesCategory && matchesQuery;
-    });
-  }, [category, query]);
+  const [businesses, setBusinesses] = useState<PublicBusiness[]>([]);
+  const [pagination, setPagination] =
+    useState<PublicBusinessesPagination | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBusinesses() {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const data = await publicBusinessService.getBusinesses({
+          page,
+          limit: PAGE_SIZE,
+          search: searchTerm || undefined,
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        setBusinesses(data.businesses);
+        setPagination(data.pagination);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setErrorMessage(getApiErrorMessage(error));
+        setBusinesses([]);
+        setPagination(null);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadBusinesses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page, searchTerm]);
+
+  function handleSearch() {
+    setPage(1);
+    setSearchTerm(query.trim());
+  }
+
+  function handleClear() {
+    setQuery("");
+    setSearchTerm("");
+    setPage(1);
+  }
+
+  const currentPage = pagination?.page ?? page;
+  const totalPages = pagination?.totalPages ?? 1;
+  const totalBusinesses = pagination?.total ?? businesses.length;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-[#211734]">
       <PublicHeader active="Emprendedoras" />
+
       <main className="relative overflow-hidden bg-[linear-gradient(135deg,#fff9fa_0%,#fff_46%,#fff0ea_100%)]">
         <EntrepreneursHero />
-        <EntrepreneursControls query={query} category={category} onQueryChange={setQuery} onCategoryChange={setCategory} />
+
+        <EntrepreneursControls
+          query={query}
+          onQueryChange={setQuery}
+          onSearch={handleSearch}
+          onClear={handleClear}
+        />
+
         <section className="mx-auto max-w-[1224px] px-5 pt-8 lg:px-0">
-          <p className="mb-4 text-base font-medium text-[#6d6383]">Mostrando {visibleEntrepreneurs.length === entrepreneurs.length ? 12 : visibleEntrepreneurs.length} emprendedoras de 40</p>
-          {visibleEntrepreneurs.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{visibleEntrepreneurs.map((entrepreneur) => <EntrepreneurCard key={entrepreneur.name} entrepreneur={entrepreneur} />)}</div>
+          <p className="mb-4 text-base font-medium text-[#6d6383]">
+            Mostrando {businesses.length} emprendimientos de {totalBusinesses}
+          </p>
+
+          {errorMessage ? (
+            <div className="mb-6 flex items-center gap-3 rounded-[24px] border border-red-100 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              {errorMessage}
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <BusinessCardSkeleton key={`business-skeleton-${index}`} />
+              ))}
+            </div>
+          ) : businesses.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {businesses.map((business) => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
           ) : (
-            <div className="rounded-[24px] bg-white px-6 py-20 text-center text-[#6d6383]">No encontramos emprendedoras para esta búsqueda.</div>
+            <div className="rounded-[24px] bg-white px-6 py-20 text-center text-[#6d6383]">
+              No encontramos emprendimientos publicados.
+            </div>
           )}
-          <PublicPagination />
+
+          <PublicPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasPreviousPage={pagination?.hasPreviousPage}
+            hasNextPage={pagination?.hasNextPage}
+            onPrevious={() => setPage((current) => Math.max(current - 1, 1))}
+            onNext={() =>
+              setPage((current) => Math.min(current + 1, totalPages))
+            }
+          />
         </section>
-        <div className="pointer-events-none absolute bottom-0 left-0 h-40 w-40 rounded-tr-full border-[24px] border-b-0 border-l-0 border-[#ffcab9]/70" />
-        <div className="pointer-events-none absolute bottom-0 right-0 flex items-end"><span className="h-20 w-20 rounded-full bg-[#dcbdd8]" /><span className="h-20 w-20 bg-[#dcbdd8] [clip-path:polygon(0_0,100%_100%,0_100%)]" /></div>
       </main>
+
       <PublicFooter />
     </div>
   );

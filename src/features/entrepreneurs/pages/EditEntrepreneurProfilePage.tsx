@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { Save } from "lucide-react";
+import { Save, UserRoundPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -27,10 +27,10 @@ function getApiErrorMessage(error: unknown) {
   if (error instanceof AxiosError) {
     const data = error.response?.data as { message?: string } | undefined;
 
-    return data?.message ?? "No fue posible actualizar el perfil.";
+    return data?.message ?? "No fue posible guardar el perfil.";
   }
 
-  return "No fue posible actualizar el perfil.";
+  return "No fue posible guardar el perfil.";
 }
 
 export function EditEntrepreneurProfilePage() {
@@ -40,6 +40,7 @@ export function EditEntrepreneurProfilePage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
 
   const {
     register,
@@ -68,6 +69,25 @@ export function EditEntrepreneurProfilePage() {
 
         const profile = await entrepreneurService.getMyProfile();
 
+        if (!profile) {
+          setIsCreateMode(true);
+          setProfileStatus(null);
+
+          reset({
+            documentType: "",
+            documentNumber: "",
+            personalStory: "",
+            shortBio: "",
+            locationText: "",
+            city: "",
+            department: "",
+            country: "Colombia",
+          });
+
+          return;
+        }
+
+        setIsCreateMode(false);
         setProfileStatus(profile.status);
 
         reset({
@@ -93,7 +113,7 @@ export function EditEntrepreneurProfilePage() {
   }, [reset]);
 
   async function onSubmit(values: EntrepreneurProfileFormValues) {
-    if (profileStatus === "approved") {
+    if (!isCreateMode && profileStatus === "approved") {
       setSubmitError(
         "El perfil aprobado no puede editarse directamente en esta versión.",
       );
@@ -103,7 +123,11 @@ export function EditEntrepreneurProfilePage() {
     try {
       setSubmitError(null);
 
-      await entrepreneurService.updateMyProfile(values);
+      if (isCreateMode) {
+        await entrepreneurService.createMyProfile(values);
+      } else {
+        await entrepreneurService.updateMyProfile(values);
+      }
 
       navigate(paths.entrepreneur.profile);
     } catch (error) {
@@ -124,14 +148,22 @@ export function EditEntrepreneurProfilePage() {
     );
   }
 
-  const isApprovedProfile = profileStatus === "approved";
+  const isApprovedProfile = !isCreateMode && profileStatus === "approved";
 
   return (
     <section>
       <PageHeader
         eyebrow="Mi perfil"
-        title="Editar perfil de emprendedora"
-        description="Actualiza tu información de identificación, ubicación, historia y biografía."
+        title={
+          isCreateMode
+            ? "Crear perfil de emprendedora"
+            : "Editar perfil de emprendedora"
+        }
+        description={
+          isCreateMode
+            ? "Completa tu información para crear tu perfil. Será enviado a revisión por un administrador."
+            : "Actualiza tu información de identificación, ubicación, historia y biografía."
+        }
         actions={
           <Button
             variant="secondary"
@@ -144,6 +176,16 @@ export function EditEntrepreneurProfilePage() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
+          {isCreateMode ? (
+            <div className="mb-5 flex gap-3 rounded-xl bg-primary-50 px-4 py-3 text-sm font-medium leading-6 text-primary-700">
+              <UserRoundPlus className="mt-0.5 h-5 w-5 shrink-0" />
+              <p>
+                Al crear tu perfil, quedará enviado a revisión. Un administrador
+                deberá aprobarlo antes de que puedas crear emprendimientos.
+              </p>
+            </div>
+          ) : null}
+
           {isApprovedProfile ? (
             <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
               Este perfil ya fue aprobado. En esta versión no puede editarse
@@ -239,7 +281,7 @@ export function EditEntrepreneurProfilePage() {
               disabled={isApprovedProfile}
             >
               <Save className="mr-2 h-4 w-4" />
-              Guardar cambios
+              {isCreateMode ? "Crear perfil" : "Guardar cambios"}
             </Button>
           </div>
         </Card>

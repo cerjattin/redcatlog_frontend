@@ -1,36 +1,21 @@
 import {
   ArrowRight,
-  ChevronDown,
   Heart,
   Lightbulb,
   MapPin,
-  Menu,
   Package,
   ShoppingBag,
   Sparkles,
-  UserRound,
   UsersRound,
-  X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { paths } from "@/routes/paths";
-
-const navItems = [
-  { label: "Inicio", href: paths.public.home },
-  {
-    label: "Sobre nosotros",
-    href: `${paths.public.home}#historia`,
-    dropdown: true,
-  },
-  { label: "Emprendedoras", href: paths.public.entrepreneurs, dropdown: true },
-  { label: "Catálogo", href: paths.public.catalog, dropdown: true },
-  { label: "Galería", href: paths.public.gallery, dropdown: true },
-  { label: "Contacto", href: `${paths.public.home}#contacto` },
-];
+import {
+  PublicFooter,
+  PublicHeader,
+} from "@/features/public/components/PublicLayout";
 
 const categories = [
   {
@@ -101,91 +86,6 @@ const products = [
     image: "/home/category-fashion.jpg",
   },
 ];
-
-function Instagram({ size = 20 }: { size?: number }) {
-  return (
-    <span style={{ fontSize: size }} aria-hidden="true">
-      ◎
-    </span>
-  );
-}
-
-export function BrandLogo({
-  variant = "purple",
-}: {
-  variant?: "purple" | "pink";
-}) {
-  const logoFile = variant === "purple" ? "logo-pink.svg" : "logo-purple.svg";
-  return (
-    <img
-      src={`/home/${logoFile}`}
-      alt="Red-Muemma"
-      className="h-[36px] w-[152px]"
-    />
-  );
-}
-
-export function PublicHeader({ active = "Inicio" }: { active?: string }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/70 bg-[#fff9fb]/95 backdrop-blur">
-      <div className="mx-auto flex h-[104px] max-w-[1224px] items-center justify-between px-5 lg:px-0">
-        <Link to={paths.public.home} aria-label="Ir al inicio">
-          <BrandLogo />
-        </Link>
-        <nav
-          className="hidden items-center gap-8 lg:flex"
-          aria-label="Navegación principal"
-        >
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className={`flex items-center gap-1 text-sm transition hover:text-[#d66eff] ${item.label === active ? "font-semibold text-[#d66eff]" : "text-[#211734]"}`}
-            >
-              {item.label}
-              {item.dropdown && <ChevronDown size={14} />}
-            </Link>
-          ))}
-        </nav>
-        <Link
-          to={paths.public.login}
-          className="hidden items-center gap-2 rounded-full border border-[#8e80aa] px-6 py-3 text-sm font-semibold text-[#3a2467] transition hover:bg-[#f7edff] lg:flex"
-        >
-          Iniciar sesión <UserRound size={18} />
-        </Link>
-        <button
-          className="rounded-full p-2 text-[#3a2467] lg:hidden"
-          onClick={() => setOpen((value) => !value)}
-          aria-label="Abrir menú"
-        >
-          {open ? <X /> : <Menu />}
-        </button>
-      </div>
-      {open && (
-        <nav className="border-t border-[#eadff2] bg-white px-5 py-5 lg:hidden">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              onClick={() => setOpen(false)}
-              className="block py-3 font-medium text-[#3a2467]"
-            >
-              {item.label}
-            </Link>
-          ))}
-          <Link
-            to={paths.public.login}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#3a2467] px-5 py-3 font-semibold text-white"
-          >
-            Iniciar sesión <UserRound size={18} />
-          </Link>
-        </nav>
-      )}
-    </header>
-  );
-}
 
 function SectionHeading({
   title,
@@ -429,7 +329,7 @@ function Products() {
                 className="h-52 w-full object-cover sm:h-72"
               />
               <div className="p-4">
-                <p className="text-xs text-[#8e80aa]">🛍 Por {product.brand}</p>
+                <p className="text-xs text-[#8e80aa]">�x:� Por {product.brand}</p>
                 <strong className="mt-3 block text-xl text-[#7044c9]">
                   {product.price}
                 </strong>
@@ -526,78 +426,6 @@ function CallToAction() {
   );
 }
 
-export function PublicFooter() {
-  return (
-    <footer id="contacto" className="bg-white pt-16">
-      <div className="mx-auto grid max-w-[1224px] gap-12 px-5 pb-12 md:grid-cols-[1.2fr_2fr] lg:px-0">
-        <div>
-          <BrandLogo variant="pink" />
-          <p className="mt-6 max-w-[300px] text-lg leading-snug text-[#3a2467]">
-            Transformando historias de vida en{" "}
-            <strong>oportunidades de crecimiento y éxito.</strong>
-          </p>
-          <div className="mt-6 flex gap-3">
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d66eff]/20 text-[#7044c9]"
-            >
-              <Instagram size={20} />
-            </a>
-            <a
-              href="#"
-              aria-label="Facebook"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d66eff]/20 font-bold text-[#7044c9]"
-            >
-              f
-            </a>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-          <FooterLinks
-            title="Enlaces"
-            items={[
-              "Inicio",
-              "Sobre nosotros",
-              "Emprendedoras",
-              "Catálogo",
-              "Galería",
-            ]}
-          />
-          <FooterLinks
-            title="Categorías"
-            items={["Artesanías", "Gastronomía", "Belleza", "Moda"]}
-          />
-          <FooterLinks
-            title="Contacto"
-            items={["info@mujeresemprendedoras", "+57 300 000 0000"]}
-          />
-        </div>
-      </div>
-      <div className="mx-auto max-w-[1224px] border-t border-[#eee7f3] px-5 py-6 text-sm text-[#6d6383] lg:px-0">
-        © 2026 Mujeres Emprendedoras. Todos los derechos reservados.
-      </div>
-    </footer>
-  );
-}
-
-function FooterLinks({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div>
-      <h3 className="font-semibold text-[#d66eff]">{title}</h3>
-      <ul className="mt-3 space-y-3 text-sm text-[#3a2467]">
-        {items.map((item) => (
-          <li key={item}>
-            <a href="#inicio" className="hover:text-[#d94673]">
-              {item}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 export function HomePage() {
   return (
     <div className="overflow-hidden bg-white text-[#211734]">
@@ -615,3 +443,4 @@ export function HomePage() {
     </div>
   );
 }
+

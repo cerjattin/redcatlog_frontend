@@ -1,7 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
@@ -37,9 +34,12 @@ import { ChangePasswordPage } from "@/features/auth/pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { HomePage } from "@/features/public/pages/HomePage";
+import { AboutPage } from "@/features/public/pages/AboutPage";
 import { CatalogPage } from "@/features/public/pages/CatalogPage";
 import { EntrepreneursPage } from "@/features/public/pages/EntrepreneursPage";
 import { GalleryPage } from "@/features/public/pages/GalleryPage";
+import { ContactPage } from "@/features/public/pages/ContactPage";
+import { NewBusinessPage } from "@/features/businesses/pages/NewBusinessPage";
 
 const adminRoles = ["admin", "super_admin"] as const;
 
@@ -49,6 +49,10 @@ const router = createBrowserRouter([
   {
     path: paths.public.home,
     element: <HomePage />,
+  },
+  {
+    path: paths.public.about,
+    element: <AboutPage />,
   },
   {
     path: paths.public.entrepreneurs,
@@ -61,6 +65,10 @@ const router = createBrowserRouter([
   {
     path: paths.public.catalog,
     element: <CatalogPage />,
+  },
+  {
+    path: paths.public.contact,
+    element: <ContactPage />,
   },
   {
     path: paths.public.login,
@@ -111,6 +119,10 @@ const router = createBrowserRouter([
               {
                 path: paths.entrepreneur.businesses,
                 element: <MyBusinessesPage />,
+              },
+              {
+                path: paths.entrepreneur.newBusiness,
+                element: <NewBusinessPage />,
               },
               {
                 path: paths.entrepreneur.businessDetail,

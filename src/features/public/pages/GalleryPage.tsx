@@ -1,7 +1,7 @@
 import { ChevronDown, Play, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { PublicFooter, PublicHeader } from "@/features/public/pages/HomePage";
+import { PublicFooter, PublicHeader } from "@/features/public/components/PublicLayout";
 import { cn } from "@/utils/cn";
 
 type GalleryFilter = "Todo" | "Fotos" | "Videos" | "Historias";
@@ -171,3 +171,4 @@ export function GalleryPage() {
     </div>
   );
 }
+

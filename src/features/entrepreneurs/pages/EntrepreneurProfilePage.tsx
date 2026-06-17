@@ -1,4 +1,4 @@
-import { Pencil } from "lucide-react";
+import { Pencil, UserRoundPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +41,26 @@ function getStatusVariant(status: string) {
   return "neutral";
 }
 
+function getProfileStatusMessage(profile: EntrepreneurProfile) {
+  if (profile.status === "pending_review") {
+    return "Tu perfil fue enviado a revisión. Un administrador debe aprobarlo antes de crear emprendimientos.";
+  }
+
+  if (profile.status === "draft") {
+    return "Tu perfil aún está en borrador. Completa tu información para continuar el proceso de revisión.";
+  }
+
+  if (profile.status === "rejected") {
+    return "Tu perfil fue rechazado. Puedes revisar y completar la información para enviarlo nuevamente.";
+  }
+
+  if (profile.status === "inactive") {
+    return "Tu perfil se encuentra inactivo. Contacta al administrador para más información.";
+  }
+
+  return null;
+}
+
 export function EntrepreneurProfilePage() {
   const navigate = useNavigate();
 
@@ -79,16 +99,29 @@ export function EntrepreneurProfilePage() {
 
   if (!profile) {
     return (
-      <EmptyState
-        title="Perfil no encontrado"
-        description="Aún no existe información de perfil para esta emprendedora."
-      />
+      <section>
+        <PageHeader
+          eyebrow="Mi perfil"
+          title="Perfil de emprendedora"
+          description="Antes de crear emprendimientos debes registrar tu perfil de emprendedora."
+        />
+
+        <EmptyState
+          icon={<UserRoundPlus className="h-6 w-6" />}
+          title="Aún no tienes perfil de emprendedora"
+          description="Para continuar, crea tu perfil. Luego será enviado a revisión por un administrador."
+          actionLabel="Crear mi perfil de emprendedora"
+          onAction={() => navigate(paths.entrepreneur.editProfile)}
+        />
+      </section>
     );
   }
 
   const city = profile.city ?? profile.user?.city ?? null;
   const department = profile.department ?? profile.user?.department ?? null;
   const country = profile.country ?? "Colombia";
+  const statusMessage = getProfileStatusMessage(profile);
+  const canEditProfile = profile.status !== "approved";
 
   return (
     <section>
@@ -97,12 +130,21 @@ export function EntrepreneurProfilePage() {
         title="Perfil de emprendedora"
         description="Consulta el estado actual de tu perfil y la información registrada."
         actions={
-          <Button onClick={() => navigate(paths.entrepreneur.editProfile)}>
+          <Button
+            disabled={!canEditProfile}
+            onClick={() => navigate(paths.entrepreneur.editProfile)}
+          >
             <Pencil className="mr-2 h-4 w-4" />
             Editar perfil
           </Button>
         }
       />
+
+      {statusMessage ? (
+        <div className="mb-4 rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium leading-6 text-amber-800">
+          {statusMessage}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_0.7fr]">
         <Card>

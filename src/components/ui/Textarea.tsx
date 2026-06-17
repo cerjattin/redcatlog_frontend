@@ -5,19 +5,21 @@ import { cn } from "@/utils/cn";
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
   error?: string;
+  wrapperClassName?: string;
 };
 
 export function Textarea({
   label,
   error,
   className,
+  wrapperClassName,
   id,
   ...props
 }: TextareaProps) {
   const textareaId = id ?? props.name;
 
   return (
-    <label className="block">
+    <label className={cn("block", wrapperClassName)}>
       {label ? (
         <span className="mb-2 block text-sm font-semibold text-ink-700">
           {label}
