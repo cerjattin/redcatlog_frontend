@@ -1,5 +1,6 @@
 import { ChevronDown, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { PublicSocialLinks } from "@/features/public/components/PublicSocialLinks";
@@ -180,6 +181,22 @@ function FooterLinks({ title, items }: { title: string; items: string[] }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+export function PublicLayout({
+  active = "Inicio",
+  children,
+}: {
+  active?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-white text-[#211734]">
+      <PublicHeader active={active} />
+      {children}
+      <PublicFooter />
     </div>
   );
 }
