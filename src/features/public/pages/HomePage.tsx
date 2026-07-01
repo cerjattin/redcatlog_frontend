@@ -6,14 +6,12 @@ import {
   Package,
   ShoppingBag,
   Sparkles,
-  Store,
   UsersRound,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { Card } from "@/components/ui/Card";
 import { publicBusinessService } from "@/features/public/api/publicBusiness.service";
 import { publicProductService } from "@/features/public/api/publicProduct.service";
 import { PublicLayout } from "@/features/public/components/PublicLayout";
@@ -22,13 +20,6 @@ import type {
   PublicProduct,
   PublicProductCategory,
 } from "@/features/public/types/publicProduct.types";
-import {
-  getPublicBusinessBannerUrl,
-  getPublicBusinessCategoryName,
-  getPublicBusinessDescription,
-  getPublicBusinessLocation,
-  getPublicBusinessLogoUrl,
-} from "@/features/public/utils/businessDisplay";
 import {
   formatPublicProductPrice,
   getPublicProductMainImage,
@@ -357,125 +348,6 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
   );
 }
 
-function BusinessCard({ business }: { business: PublicBusiness }) {
-  const bannerUrl = getPublicBusinessBannerUrl(business);
-  const logoUrl = getPublicBusinessLogoUrl(business);
-  const categoryName = getPublicBusinessCategoryName(business);
-  const location = getPublicBusinessLocation(business);
-  const description = getPublicBusinessDescription(business);
-
-  return (
-    <Card className="overflow-hidden rounded-[28px] border-0 p-0 shadow-none">
-      <div className="relative h-[290px] bg-[#fff0ea]">
-        {bannerUrl ? (
-          <img
-            src={bannerUrl}
-            alt={`Banner de ${business.name}`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Store className="h-20 w-20 text-[#ff9f82]" />
-          </div>
-        )}
-
-        <div className="absolute bottom-4 left-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-md">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={`Logo de ${business.name}`}
-              className="h-full w-full object-contain p-2"
-            />
-          ) : (
-            <Store className="h-8 w-8 text-[#d94673]" />
-          )}
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="flex flex-wrap gap-3 text-xs">
-          <span className="rounded-full bg-[#ffe6ec] px-3 py-1 text-[#d94673]">
-            {categoryName}
-          </span>
-
-          {location ? (
-            <span className="flex items-center gap-1 text-[#8e80aa]">
-              <MapPin size={12} /> {location}
-            </span>
-          ) : null}
-        </div>
-
-        <h3 className="mt-4 text-2xl font-bold text-[#3a2467]">
-          {business.name}
-        </h3>
-
-        <p className="mt-1 line-clamp-2 text-sm text-[#6d6383]">
-          {description}
-        </p>
-
-        <Link
-          to={paths.public.entrepreneurs}
-          className="mt-5 flex items-center justify-center gap-2 text-sm font-semibold text-[#3a2467]"
-        >
-          Ver emprendimiento <ArrowRight size={15} />
-        </Link>
-      </div>
-    </Card>
-  );
-}
-
-function Entrepreneurs({
-  businesses,
-  isLoading,
-}: {
-  businesses: PublicBusiness[];
-  isLoading: boolean;
-}) {
-  return (
-    <section id="emprendedoras" className="bg-[#fff4ef] py-20 md:py-24">
-      <div className="mx-auto max-w-[1224px] px-5 lg:px-0">
-        <SectionHeading
-          title="Emprendimientos Destacados"
-          subtitle="Conoce las marcas que están transformando vidas a través de su trabajo"
-        />
-
-        {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <article
-                key={`business-home-skeleton-${index}`}
-                className="overflow-hidden rounded-[28px] bg-white"
-              >
-                <div className="h-[290px] animate-pulse bg-[#f3edf7]" />
-                <div className="space-y-4 p-6">
-                  <div className="h-6 w-40 animate-pulse rounded-xl bg-[#f3edf7]" />
-                  <div className="h-16 w-full animate-pulse rounded-xl bg-[#f3edf7]" />
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : businesses.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-3">
-            {businesses.map((business) => (
-              <BusinessCard key={business.id} business={business} />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-[28px] bg-white px-6 py-12 text-center text-[#6d6383]">
-            Aún no hay emprendimientos publicados.
-          </div>
-        )}
-
-        <div className="mt-12 text-center">
-          <PillLink to={paths.public.entrepreneurs}>
-            Conoce todos los emprendimientos
-          </PillLink>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function ProductCard({ product }: { product: PublicProduct }) {
   const imageUrl = getPublicProductMainImage(product);
   const price = formatPublicProductPrice(product);
@@ -669,11 +541,11 @@ export function HomePage() {
         const [productsResponse, businessesResponse] = await Promise.all([
           publicProductService.getProducts({
             page: 1,
-            limit: 100,
+            limit: 8,
           }),
           publicBusinessService.getBusinesses({
             page: 1,
-            limit: 100,
+            limit: 6,
           }),
         ]);
 
@@ -716,7 +588,6 @@ export function HomePage() {
     [products],
   );
   const featuredProducts = products.slice(0, 4);
-  const featuredBusinesses = businesses.slice(0, 3);
   const citiesTotal = getUniqueCitiesCount(businesses);
 
   return (
@@ -737,8 +608,6 @@ export function HomePage() {
         />
 
         <Categories categories={homeCategories} />
-
-        <Entrepreneurs businesses={featuredBusinesses} isLoading={isLoading} />
 
         <Products products={featuredProducts} isLoading={isLoading} />
 
