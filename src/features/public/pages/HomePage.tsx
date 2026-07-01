@@ -313,7 +313,7 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
   return (
     <section
       id="categorias"
-      className="relative overflow-hidden bg-[#fff8f5] py-20 md:py-24"
+      className="relative overflow-hidden bg-[linear-gradient(180deg,#fff8f5_0%,#fff8f5_48%,#fff4ef_100%)] py-20 md:py-24"
     >
       <div className="mx-auto max-w-[1224px] px-5 lg:px-0">
         <SectionHeading
