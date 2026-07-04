@@ -1,4 +1,4 @@
-export type CategoryType = "business" | "product" | "both";
+export type CategoryType = "entrepreneur" | "product" | "both";
 
 export type Category = {
   id: string;

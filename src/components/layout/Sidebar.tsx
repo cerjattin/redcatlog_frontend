@@ -1,9 +1,9 @@
 import {
+  ClipboardCheck,
   KeyRound,
   LayoutDashboard,
   Package,
   ShieldCheck,
-  Store,
   Tags,
   UserRoundCheck,
   Users,
@@ -14,7 +14,7 @@ import { NavLink } from "react-router-dom";
 
 import { paths } from "@/routes/paths";
 import { useAuthStore } from "@/store/auth.store";
-import { isAdminRole, isEntrepreneurRole } from "@/utils/roles";
+import { isAdminRole, isEditorRole } from "@/utils/roles";
 
 type SidebarProps = {
   isMobileOpen: boolean;
@@ -28,34 +28,6 @@ type SidebarLink = {
     className?: string;
   }>;
 };
-
-const entrepreneurLinks: SidebarLink[] = [
-  {
-    label: "Dashboard",
-    href: paths.entrepreneur.dashboard,
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Mi perfil",
-    href: paths.entrepreneur.profile,
-    icon: UserRoundCheck,
-  },
-  {
-    label: "Emprendimientos",
-    href: paths.entrepreneur.businesses,
-    icon: Store,
-  },
-  {
-    label: "Productos",
-    href: paths.entrepreneur.products,
-    icon: Package,
-  },
-  {
-    label: "Seguridad",
-    href: paths.auth.changePassword,
-    icon: KeyRound,
-  },
-];
 
 const adminLinks: SidebarLink[] = [
   {
@@ -72,11 +44,6 @@ const adminLinks: SidebarLink[] = [
     label: "Emprendedoras",
     href: paths.admin.entrepreneurs,
     icon: UserRoundCheck,
-  },
-  {
-    label: "Emprendimientos",
-    href: paths.admin.businesses,
-    icon: Store,
   },
   {
     label: "Productos",
@@ -100,14 +67,43 @@ const adminLinks: SidebarLink[] = [
   },
 ];
 
-function getRoleName(role: unknown) {
-  if (!role) {
-    return null;
-  }
+const editorLinks: SidebarLink[] = [
+  {
+    label: "Dashboard",
+    href: paths.editor.dashboard,
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Emprendedoras",
+    href: paths.admin.entrepreneurs,
+    icon: UserRoundCheck,
+  },
+  {
+    label: "Productos",
+    href: paths.admin.products,
+    icon: Package,
+  },
+  {
+    label: "Categorías",
+    href: paths.admin.categories,
+    icon: Tags,
+  },
+  {
+    label: "Aprobaciones",
+    href: paths.admin.approvals,
+    icon: ClipboardCheck,
+  },
+  {
+    label: "Seguridad",
+    href: paths.auth.changePassword,
+    icon: KeyRound,
+  },
+];
 
-  if (typeof role === "string") {
-    return role;
-  }
+function getRoleName(role: unknown) {
+  if (!role) return null;
+
+  if (typeof role === "string") return role;
 
   if (typeof role === "object" && "name" in role) {
     const roleName = (role as { name?: unknown }).name;
@@ -119,12 +115,12 @@ function getRoleName(role: unknown) {
 }
 
 function getLinksByRole(role?: string | null) {
-  if (isAdminRole(role as never)) {
+  if (isAdminRole(role)) {
     return adminLinks;
   }
 
-  if (isEntrepreneurRole(role as never)) {
-    return entrepreneurLinks;
+  if (isEditorRole(role)) {
+    return editorLinks;
   }
 
   return [];
@@ -139,13 +135,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-primary-600">
-          Red Mujeres
+          REDMUEMMA
         </p>
 
-        <h1 className="mt-2 text-xl font-bold text-ink-900">Panel Beta</h1>
+        <h1 className="mt-2 text-xl font-bold text-ink-900">Panel privado</h1>
 
         <p className="mt-1 text-xs text-ink-500">
-          Gestión privada de plataforma
+          Gestión de plataforma y catálogo
         </p>
       </div>
 

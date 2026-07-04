@@ -1,49 +1,39 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AdminApprovalsPage } from "@/features/admin/approvals/pages/AdminApprovalsPage";
+import { AdminCategoriesPage } from "@/features/admin/categories/pages/AdminCategoriesPage";
+import { CategoryFormPage } from "@/features/admin/categories/pages/CategoryFormPage";
+import { AdminEntrepreneurDetailPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneurDetailPage";
+import { AdminEntrepreneursPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneursPage";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
+import { AdminProductDetailPage } from "@/features/admin/products/pages/AdminProductDetailPage";
+import { AdminProductsPage } from "@/features/admin/products/pages/AdminProductsPage";
+import { AdminUserDetailPage } from "@/features/admin/users/pages/AdminUserDetailPage";
+import { AdminUsersPage } from "@/features/admin/users/pages/AdminUsersPage";
+import { ChangePasswordPage } from "@/features/auth/pages/ChangePasswordPage";
+import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { RegisterPage } from "@/features/auth/pages/RegisterPage";
+import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { UnauthorizedPage } from "@/features/auth/pages/UnauthorizedPage";
-import { EntrepreneurDashboardPage } from "@/features/dashboard/pages/EntrepreneurDashboardPage";
+import { EditorDashboardPage } from "@/features/editor/pages/EditorDashboardPage";
+import { EditMyProductPage } from "@/features/products/pages/EditMyProductPage";
+import { NewProductPage } from "@/features/products/pages/NewProductPage";
+import { ProductImagesPage } from "@/features/products/pages/ProductImagesPage";
+import { AboutPage } from "@/features/public/pages/AboutPage";
+import { CatalogPage } from "@/features/public/pages/CatalogPage";
+import { ContactPage } from "@/features/public/pages/ContactPage";
+import { EntrepreneursPage } from "@/features/public/pages/EntrepreneursPage";
+import { GalleryPage } from "@/features/public/pages/GalleryPage";
+import { HomePage } from "@/features/public/pages/HomePage";
 import { paths } from "@/routes/paths";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { RoleRoute } from "@/routes/RoleRoute";
-import { LoginPage } from "@/features/auth/pages/LoginPage";
-import { RegisterPage } from "@/features/auth/pages/RegisterPage";
-import { EntrepreneurProfilePage } from "@/features/entrepreneurs/pages/EntrepreneurProfilePage";
-import { EditEntrepreneurProfilePage } from "@/features/entrepreneurs/pages/EditEntrepreneurProfilePage";
-import { MyBusinessesPage } from "@/features/businesses/pages/MyBusinessesPage";
-import { MyBusinessDetailPage } from "@/features/businesses/pages/MyBusinessDetailPage";
-import { EditMyBusinessPage } from "@/features/businesses/pages/EditMyBusinessPage";
-import { MyProductsPage } from "@/features/products/pages/MyProductsPage";
-import { MyProductDetailPage } from "@/features/products/pages/MyProductDetailPage";
-import { EditMyProductPage } from "@/features/products/pages/EditMyProductPage";
-import { ProductImagesPage } from "@/features/products/pages/ProductImagesPage";
-import { NewProductPage } from "@/features/products/pages/NewProductPage";
-import { AdminProductsPage } from "@/features/admin/products/pages/AdminProductsPage";
-import { AdminProductDetailPage } from "@/features/admin/products/pages/AdminProductDetailPage";
-import { AdminCategoriesPage } from "@/features/admin/categories/pages/AdminCategoriesPage";
-import { CategoryFormPage } from "@/features/admin/categories/pages/CategoryFormPage";
-import { AdminBusinessesPage } from "@/features/admin/businesses/pages/AdminBusinessesPage";
-import { AdminBusinessDetailPage } from "@/features/admin/businesses/pages/AdminBusinessDetailPage";
-import { AdminEntrepreneursPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneursPage";
-import { AdminEntrepreneurDetailPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneurDetailPage";
-import { AdminApprovalsPage } from "@/features/admin/approvals/pages/AdminApprovalsPage";
-import { AdminUsersPage } from "@/features/admin/users/pages/AdminUsersPage";
-import { AdminUserDetailPage } from "@/features/admin/users/pages/AdminUserDetailPage";
-import { ChangePasswordPage } from "@/features/auth/pages/ChangePasswordPage";
-import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
-import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
-import { HomePage } from "@/features/public/pages/HomePage";
-import { AboutPage } from "@/features/public/pages/AboutPage";
-import { CatalogPage } from "@/features/public/pages/CatalogPage";
-import { EntrepreneursPage } from "@/features/public/pages/EntrepreneursPage";
-import { GalleryPage } from "@/features/public/pages/GalleryPage";
-import { ContactPage } from "@/features/public/pages/ContactPage";
-import { NewBusinessPage } from "@/features/businesses/pages/NewBusinessPage";
 
-const adminRoles = ["admin", "super_admin"] as const;
-
-const entrepreneurRoles = ["entrepreneur", "emprendedora"] as const;
+const adminRoles = ["admin"] as const;
+const adminOrEditorRoles = ["admin", "editor"] as const;
+const editorRoles = ["editor"] as const;
 
 const router = createBrowserRouter([
   {
@@ -90,7 +80,6 @@ const router = createBrowserRouter([
     path: paths.public.unauthorized,
     element: <UnauthorizedPage />,
   },
-
   {
     element: <ProtectedRoute />,
     children: [
@@ -101,64 +90,6 @@ const router = createBrowserRouter([
       {
         element: <DashboardLayout />,
         children: [
-          {
-            element: <RoleRoute allowedRoles={[...entrepreneurRoles]} />,
-            children: [
-              {
-                path: paths.entrepreneur.dashboard,
-                element: <EntrepreneurDashboardPage />,
-              },
-              {
-                path: paths.entrepreneur.profile,
-                element: <EntrepreneurProfilePage />,
-              },
-              {
-                path: paths.entrepreneur.editProfile,
-                element: <EditEntrepreneurProfilePage />,
-              },
-              {
-                path: paths.entrepreneur.businesses,
-                element: <MyBusinessesPage />,
-              },
-              {
-                path: paths.entrepreneur.newBusiness,
-                element: <NewBusinessPage />,
-              },
-              {
-                path: paths.entrepreneur.businessDetail,
-                element: <MyBusinessDetailPage />,
-              },
-              {
-                path: paths.entrepreneur.editBusiness,
-                element: <EditMyBusinessPage />,
-              },
-              {
-                path: paths.entrepreneur.editProfile,
-                element: <EditEntrepreneurProfilePage />,
-              },
-              {
-                path: paths.entrepreneur.products,
-                element: <MyProductsPage />,
-              },
-              {
-                path: paths.entrepreneur.productDetail,
-                element: <MyProductDetailPage />,
-              },
-              {
-                path: paths.entrepreneur.editProduct,
-                element: <EditMyProductPage />,
-              },
-              {
-                path: paths.entrepreneur.productImages,
-                element: <ProductImagesPage />,
-              },
-              {
-                path: paths.entrepreneur.newProduct,
-                element: <NewProductPage />,
-              },
-            ],
-          },
-
           {
             element: <RoleRoute allowedRoles={[...adminRoles]} />,
             children: [
@@ -174,6 +105,22 @@ const router = createBrowserRouter([
                 path: paths.admin.userDetail,
                 element: <AdminUserDetailPage />,
               },
+            ],
+          },
+
+          {
+            element: <RoleRoute allowedRoles={[...editorRoles]} />,
+            children: [
+              {
+                path: paths.editor.dashboard,
+                element: <EditorDashboardPage />,
+              },
+            ],
+          },
+
+          {
+            element: <RoleRoute allowedRoles={[...adminOrEditorRoles]} />,
+            children: [
               {
                 path: paths.admin.entrepreneurs,
                 element: <AdminEntrepreneursPage />,
@@ -183,20 +130,24 @@ const router = createBrowserRouter([
                 element: <AdminEntrepreneurDetailPage />,
               },
               {
-                path: paths.admin.businesses,
-                element: <AdminBusinessesPage />,
-              },
-              {
-                path: paths.admin.businessDetail,
-                element: <AdminBusinessDetailPage />,
-              },
-              {
                 path: paths.admin.products,
                 element: <AdminProductsPage />,
               },
               {
                 path: paths.admin.productDetail,
                 element: <AdminProductDetailPage />,
+              },
+              {
+                path: paths.admin.newProduct,
+                element: <NewProductPage />,
+              },
+              {
+                path: paths.admin.editProduct,
+                element: <EditMyProductPage />,
+              },
+              {
+                path: paths.admin.productImages,
+                element: <ProductImagesPage />,
               },
               {
                 path: paths.admin.categories,

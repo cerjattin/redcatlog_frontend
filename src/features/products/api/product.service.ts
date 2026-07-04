@@ -5,31 +5,61 @@ import { env } from "@/lib/env";
 import type {
   CreateProductRequest,
   ProductSummary,
+  UpdateProductRequest,
 } from "@/features/products/types/product.types";
 
 type ProductListEnvelope = {
   success: boolean;
   message: string;
-  data: ProductSummary[];
+  data:
+    | ProductSummary[]
+    | {
+        items?: ProductSummary[];
+        products?: ProductSummary[];
+        pagination?: unknown;
+      };
 };
 
 type ProductDetailEnvelope = {
   success: boolean;
   message: string;
-  data: ProductSummary;
+  data:
+    | ProductSummary
+    | {
+        product?: ProductSummary;
+      };
 };
 
 type UploadImageEnvelope = {
   success: boolean;
   message: string;
-  data: {
-    url?: string;
-    imageUrl?: string;
-    fileUrl?: string;
-    path?: string;
-    filename?: string;
-  };
+  data:
+    | ProductSummary
+    | {
+        product?: ProductSummary;
+      };
 };
+
+function unwrapProductList(envelope: ProductListEnvelope): ProductSummary[] {
+  if (Array.isArray(envelope.data)) {
+    return envelope.data;
+  }
+
+  return envelope.data.items ?? envelope.data.products ?? [];
+}
+
+function unwrapProduct(envelope: ProductDetailEnvelope | UploadImageEnvelope) {
+  if (
+    envelope.data &&
+    typeof envelope.data === "object" &&
+    "product" in envelope.data &&
+    envelope.data.product
+  ) {
+    return envelope.data.product;
+  }
+
+  return envelope.data as ProductSummary;
+}
 
 function getAccessToken() {
   const rawAuth = localStorage.getItem("red-mujeres-auth");
@@ -45,28 +75,22 @@ function getAccessToken() {
   }
 }
 
-function resolveUploadedImageUrl(data: UploadImageEnvelope) {
-  const imageUrl =
-    data.data.imageUrl ?? data.data.url ?? data.data.fileUrl ?? data.data.path;
-
-  if (!imageUrl) {
-    throw new Error("El backend no devolvió la URL de la imagen subida.");
-  }
-
-  return imageUrl;
-}
-
 export const productService = {
   async listMyProducts(): Promise<ProductSummary[]> {
-    const { data } = await api.get<ProductListEnvelope>("/products/me");
+    const { data } = await api.get<ProductListEnvelope>("/products", {
+      params: {
+        page: 1,
+        limit: 100,
+      },
+    });
 
-    return data.data;
+    return unwrapProductList(data);
   },
 
   async getMyProductById(id: string): Promise<ProductSummary> {
-    const { data } = await api.get<ProductDetailEnvelope>(`/products/me/${id}`);
+    const { data } = await api.get<ProductDetailEnvelope>(`/products/${id}`);
 
-    return data.data;
+    return unwrapProduct(data);
   },
 
   async createMyProduct(
@@ -77,19 +101,19 @@ export const productService = {
       payload,
     );
 
-    return data.data;
+    return unwrapProduct(data);
   },
 
   async updateMyProduct(
     id: string,
-    payload: Partial<ProductSummary>,
+    payload: UpdateProductRequest,
   ): Promise<ProductSummary> {
     const { data } = await api.put<ProductDetailEnvelope>(
-      `/products/me/${id}`,
+      `/products/${id}`,
       payload,
     );
 
-    return data.data;
+    return unwrapProduct(data);
   },
 
   async uploadProductImage(
@@ -102,8 +126,8 @@ export const productService = {
 
     const accessToken = getAccessToken();
 
-    const uploadResponse = await axios.post<UploadImageEnvelope>(
-      `${env.apiBaseUrl}/uploads/images/products`,
+    const { data } = await axios.post<UploadImageEnvelope>(
+      `${env.apiBaseUrl}/products/${productId}/images/upload`,
       formData,
       {
         headers: accessToken
@@ -114,28 +138,7 @@ export const productService = {
       },
     );
 
-    const imageUrl = resolveUploadedImageUrl(uploadResponse.data);
-
-    const product = await this.getMyProductById(productId);
-
-    const usedSortOrders =
-      product.images
-        ?.map((image) => image.sortOrder)
-        .filter(
-          (sortOrder): sortOrder is number => typeof sortOrder === "number",
-        ) ?? [];
-
-    const nextSortOrder =
-      [1, 2, 3].find((order) => !usedSortOrders.includes(order)) ?? 1;
-
-    await api.post(`/products/${productId}/images`, {
-      imageUrl,
-      altText: "Imagen del producto",
-      sortOrder: nextSortOrder,
-      isMain: product.images?.length === 0,
-    });
-
-    return this.getMyProductById(productId);
+    return unwrapProduct(data);
   },
 
   async deleteProductImage(productId: string, imageId: string): Promise<void> {

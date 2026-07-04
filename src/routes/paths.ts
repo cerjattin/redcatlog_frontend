@@ -17,6 +17,35 @@ export const paths = {
     resetPassword: "/reset-password",
   },
 
+  admin: {
+    dashboard: "/admin",
+    users: "/admin/users",
+    userDetail: "/admin/users/:id",
+
+    entrepreneurs: "/admin/entrepreneurs",
+    entrepreneurDetail: "/admin/entrepreneurs/:id",
+
+    products: "/admin/products",
+    productDetail: "/admin/products/:id",
+    newProduct: "/admin/products/new",
+    editProduct: "/admin/products/:id/edit",
+    productImages: "/admin/products/:id/images",
+
+    categories: "/admin/categories",
+    newCategory: "/admin/categories/new",
+    editCategory: "/admin/categories/:id/edit",
+
+    approvals: "/admin/approvals",
+  },
+
+  editor: {
+    dashboard: "/editor",
+  },
+
+  /**
+   * Legacy temporal.
+   * Se elimina cuando terminemos de refactorizar features/products viejos.
+   */
   entrepreneur: {
     dashboard: "/dashboard",
     profile: "/dashboard/profile",
@@ -30,21 +59,5 @@ export const paths = {
     editProduct: "/dashboard/products/:id/edit",
     productImages: "/dashboard/products/:id/images",
     newProduct: "/dashboard/products/new",
-  },
-
-  admin: {
-    dashboard: "/admin",
-    users: "/admin/users",
-    userDetail: "/admin/users/:id",
-    entrepreneurs: "/admin/entrepreneurs",
-    entrepreneurDetail: "/admin/entrepreneurs/:id",
-    businesses: "/admin/businesses",
-    businessDetail: "/admin/businesses/:id",
-    products: "/admin/products",
-    productDetail: "/admin/products/:id",
-    categories: "/admin/categories",
-    newCategory: "/admin/categories/new",
-    editCategory: "/admin/categories/:id/edit",
-    approvals: "/admin/approvals",
   },
 } as const;

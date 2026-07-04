@@ -3,6 +3,7 @@ import { AxiosError } from "axios";
 import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Loader } from "@/components/feedback/Loader";
@@ -11,8 +12,10 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { businessService } from "@/features/businesses/api/business.service";
-import type { BusinessSummary } from "@/features/businesses/types/business.types";
+import { categoryService } from "@/features/admin/categories/api/category.service";
+import type { Category } from "@/features/admin/categories/types/category.types";
+import { adminEntrepreneurService } from "@/features/admin/entrepreneurs/api/adminEntrepreneur.service";
+import type { AdminEntrepreneur } from "@/features/admin/entrepreneurs/types/adminEntrepreneur.types";
 import { productService } from "@/features/products/api/product.service";
 import {
   createProductSchema,
@@ -20,9 +23,6 @@ import {
 } from "@/features/products/schemas/createProduct.schema";
 import { paths } from "@/routes/paths";
 import { createSlug } from "@/utils/slug";
-import { useNavigate } from "react-router-dom";
-import { categoryService } from "@/features/admin/categories/api/category.service";
-import type { Category } from "@/features/admin/categories/types/category.types";
 
 function getApiErrorMessage(error: unknown) {
   if (error instanceof AxiosError) {
@@ -31,21 +31,43 @@ function getApiErrorMessage(error: unknown) {
     return data?.message ?? "No fue posible crear el producto.";
   }
 
+  if (error instanceof Error) {
+    return error.message;
+  }
+
   return "No fue posible crear el producto.";
 }
 
 function getProductDetailPath(id: string) {
-  return paths.entrepreneur.productDetail.replace(":id", id);
+  return paths.admin.productDetail.replace(":id", id);
+}
+
+function getEntrepreneurName(entrepreneur: AdminEntrepreneur) {
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName =
+    entrepreneur.firstName?.trim() ?? entrepreneur.user?.firstName?.trim() ?? "";
+
+  const lastName =
+    entrepreneur.lastName?.trim() ?? entrepreneur.user?.lastName?.trim() ?? "";
+
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
 }
 
 export function NewProductPage() {
   const navigate = useNavigate();
 
-  const [businesses, setBusinesses] = useState<BusinessSummary[]>([]);
+  const [entrepreneurs, setEntrepreneurs] = useState<AdminEntrepreneur[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
 
   const {
     register,
@@ -56,7 +78,7 @@ export function NewProductPage() {
   } = useForm<CreateProductFormValues>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
-      businessId: "",
+      entrepreneurId: "",
       categoryId: null,
       name: "",
       slug: "",
@@ -78,29 +100,33 @@ export function NewProductPage() {
   }, [name, setValue]);
 
   useEffect(() => {
-    async function loadBusinesses() {
+    async function loadFormData() {
       try {
         setIsLoading(true);
         setLoadError(null);
 
-        const [businessData, categoryData] = await Promise.all([
-          businessService.listMyBusinesses(),
+        const [entrepreneurData, categoryData] = await Promise.all([
+          adminEntrepreneurService.listEntrepreneurs({
+            page: 1,
+            limit: 100,
+            status: "approved",
+          }),
           categoryService.listCategories({
             type: "product",
             isActive: "true",
           }),
         ]);
 
-        setBusinesses(businessData);
+        setEntrepreneurs(entrepreneurData.items);
         setCategories(categoryData);
       } catch {
-        setLoadError("No fue posible cargar tus emprendimientos.");
+        setLoadError("No fue posible cargar emprendedoras y categorías.");
       } finally {
         setIsLoading(false);
       }
     }
 
-    void loadBusinesses();
+    void loadFormData();
   }, []);
 
   async function onSubmit(values: CreateProductFormValues) {
@@ -108,12 +134,16 @@ export function NewProductPage() {
       setSubmitError(null);
 
       const product = await productService.createMyProduct({
-        ...values,
+        entrepreneurId: values.entrepreneurId,
         categoryId: values.categoryId || null,
+        name: values.name,
+        slug: values.slug,
         shortDescription: values.shortDescription || null,
         description: values.description || null,
         price: values.hasPrice ? (values.price ?? null) : null,
+        hasPrice: values.hasPrice,
         stock: values.managesStock ? (values.stock ?? null) : null,
+        managesStock: values.managesStock,
       });
 
       navigate(getProductDetailPath(product.id));
@@ -140,11 +170,12 @@ export function NewProductPage() {
       <PageHeader
         eyebrow="Productos"
         title="Crear producto"
-        description="Registra un nuevo producto asociado a uno de tus emprendimientos."
+        description="Registra un producto de REDMUEMMA asociado directamente a una emprendedora."
         actions={
           <Button
+            type="button"
             variant="secondary"
-            onClick={() => navigate(paths.entrepreneur.products)}
+            onClick={() => navigate(paths.admin.products)}
           >
             Volver
           </Button>
@@ -156,44 +187,50 @@ export function NewProductPage() {
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-ink-700">
-                Emprendimiento
+                Emprendedora
               </span>
 
               <select
                 className="h-11 w-full rounded-xl border border-ink-100 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
-                {...register("businessId")}
+                {...register("entrepreneurId")}
               >
-                <option value="">Selecciona un emprendimiento</option>
+                <option value="">Selecciona una emprendedora</option>
 
-                {businesses.map((business) => (
-                  <option key={business.id} value={business.id}>
-                    {business.name}
+                {entrepreneurs.map((entrepreneur) => (
+                  <option key={entrepreneur.id} value={entrepreneur.id}>
+                    {getEntrepreneurName(entrepreneur)}
                   </option>
                 ))}
               </select>
 
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-ink-700">
-                  Categoría
-                </span>
-
-                <select
-                  className="h-11 w-full rounded-xl border border-ink-100 bg-white px-4 text-sm text-ink-900 outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
-                  {...register("categoryId")}
-                >
-                  <option value="">Sin categoría</option>
-
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {errors.businessId?.message ? (
+              {errors.entrepreneurId?.message ? (
                 <span className="mt-2 block text-xs font-medium text-red-600">
-                  {errors.businessId.message}
+                  {errors.entrepreneurId.message}
+                </span>
+              ) : null}
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-ink-700">
+                Categoría
+              </span>
+
+              <select
+                className="h-11 w-full rounded-xl border border-ink-100 bg-white px-4 text-sm text-ink-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+                {...register("categoryId")}
+              >
+                <option value="">Sin categoría</option>
+
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+
+              {errors.categoryId?.message ? (
+                <span className="mt-2 block text-xs font-medium text-red-600">
+                  {errors.categoryId.message}
                 </span>
               ) : null}
             </label>
@@ -283,8 +320,9 @@ export function NewProductPage() {
 
           <div className="mt-6 flex justify-end gap-3">
             <Button
+              type="button"
               variant="secondary"
-              onClick={() => navigate(paths.entrepreneur.products)}
+              onClick={() => navigate(paths.admin.products)}
             >
               Cancelar
             </Button>

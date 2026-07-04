@@ -1,11 +1,12 @@
-export type UserRole =
-  | "admin"
-  | "super_admin"
-  | "entrepreneur"
-  | "emprendedora"
-  | "visitor";
+export type UserRole = "admin" | "editor" | "visitor";
 
-export type UserStatus = "active" | "inactive" | "pending" | "rejected";
+export type UserStatus =
+  | "active"
+  | "inactive"
+  | "pending"
+  | "blocked"
+  | "deleted"
+  | "rejected";
 
 export type AuthUser = {
   id: string;

@@ -9,50 +9,97 @@ export type ProductStatus =
 
 export type ProductImage = {
   id: string;
+  productId?: string | null;
   imageUrl: string;
   altText?: string | null;
   sortOrder?: number | null;
   isMain?: boolean;
 };
 
-export type ProductSummary = {
+export type ProductEntrepreneurSummary = {
   id: string;
-  businessId: string;
+  userId?: string | null;
   categoryId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  slug?: string | null;
+  photoUrl?: string | null;
+  bannerUrl?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+  websiteUrl?: string | null;
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
+  status?: string | null;
+};
+
+export type ProductCategorySummary = {
+  id: string;
   name: string;
   slug: string;
+};
+
+export type ProductSummary = {
+  id: string;
+  entrepreneurId: string;
+  categoryId?: string | null;
+
+  name: string;
+  slug: string;
+
   shortDescription?: string | null;
   description?: string | null;
-  price?: number | null;
+
+  price?: string | number | null;
   hasPrice?: boolean;
+
   stock?: number | null;
   managesStock?: boolean;
+
   status: ProductStatus;
+  isFeatured?: boolean;
+  featuredOrder?: number | null;
+
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectedAt?: string | null;
   rejectionReason?: string | null;
+  publishedAt?: string | null;
+
+  entrepreneur?: ProductEntrepreneurSummary | null;
+  category?: ProductCategorySummary | null;
+  images?: ProductImage[];
+
   createdAt?: string;
   updatedAt?: string;
-  business?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-  category?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
-  images?: ProductImage[];
 };
 
 export type CreateProductRequest = {
-  businessId: string;
+  entrepreneurId: string;
   categoryId?: string | null;
+
   name: string;
   slug: string;
+
   shortDescription?: string | null;
   description?: string | null;
-  price?: number | null;
+
+  price?: number | string | null;
   hasPrice?: boolean;
-  stock?: number | null;
+
+  stock?: number | string | null;
   managesStock?: boolean;
+};
+
+export type UpdateProductRequest = Partial<CreateProductRequest> & {
+  status?: ProductStatus;
+  isFeatured?: boolean;
+  featuredOrder?: number | string | null;
 };

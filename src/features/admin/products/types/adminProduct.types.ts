@@ -1,15 +1,16 @@
 import type {
-  ProductSummary,
   ProductStatus,
+  ProductSummary,
 } from "@/features/products/types/product.types";
 
 export type AdminProductListQuery = {
   page?: number;
   limit?: number;
   status?: ProductStatus | string;
-  businessId?: string;
+  entrepreneurId?: string;
   categoryId?: string;
   search?: string;
+  isFeatured?: "true" | "false";
 };
 
 export type AdminProductPagination = {
@@ -17,6 +18,8 @@ export type AdminProductPagination = {
   limit: number;
   total: number;
   totalPages: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 };
 
 export type AdminProductListResponse = {

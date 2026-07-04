@@ -3,52 +3,120 @@ export type EntrepreneurStatus =
   | "pending_review"
   | "approved"
   | "rejected"
-  | "inactive";
+  | "inactive"
+  | "active";
 
-export type EntrepreneurProfileUser = {
+export type AdminEntrepreneurUser = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string | null;
-  whatsapp?: string | null;
-  city?: string | null;
-  department?: string | null;
-  status?: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  city: string | null;
+  department: string | null;
+  status: string;
+  role: {
+    id: string;
+    name: string;
+  } | null;
 };
 
-export type EntrepreneurBusinessSummary = {
+export type AdminEntrepreneurCategory = {
   id: string;
   name: string;
   slug: string;
-  status: string;
 };
 
-export type EntrepreneurProfile = {
+export type AdminEntrepreneur = {
   id: string;
-  userId: string;
+  userId?: string | null;
+  categoryId?: string | null;
+
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  slug?: string | null;
+
   documentType?: string | null;
   documentNumber?: string | null;
+
   personalStory?: string | null;
   shortBio?: string | null;
+  bio?: string | null;
   locationText?: string | null;
+
+  photoUrl?: string | null;
+  profilePhotoUrl?: string | null;
+  bannerUrl?: string | null;
+
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+  websiteUrl?: string | null;
+
   city?: string | null;
   department?: string | null;
   country?: string | null;
+
   status: EntrepreneurStatus;
-  user?: EntrepreneurProfileUser | null;
-  businesses?: EntrepreneurBusinessSummary[];
+
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
+
+  createdAt?: string;
+  updatedAt?: string;
+
+  user?: AdminEntrepreneurUser | null;
+  category?: AdminEntrepreneurCategory | null;
+
+  /**
+   * Legacy temporal.
+   * Se mantiene para no romper páginas antiguas mientras eliminamos businesses.
+   */
+  businesses?: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+  }[];
 };
 
-export type CreateEntrepreneurProfileRequest = {
-  documentType?: string;
-  documentNumber?: string;
-  personalStory?: string;
-  shortBio?: string;
-  locationText?: string;
+export type AdminEntrepreneurListQuery = {
+  page?: number;
+  limit?: number;
+  status?: EntrepreneurStatus | string;
   city?: string;
   department?: string;
-  country?: string;
+  categoryId?: string;
+  search?: string;
 };
 
-export type UpdateEntrepreneurProfileRequest = CreateEntrepreneurProfileRequest;
+export type AdminEntrepreneurPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
+};
+
+export type AdminEntrepreneurListResponse = {
+  items: AdminEntrepreneur[];
+  pagination: AdminEntrepreneurPagination;
+};
+
+export type RejectEntrepreneurRequest = {
+  rejectionReason: string;
+};
+
+export type UpdateEntrepreneurStatusRequest = {
+  status: EntrepreneurStatus;
+};
