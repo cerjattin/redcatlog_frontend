@@ -1,10 +1,15 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminApprovalsPage } from "@/features/admin/approvals/pages/AdminApprovalsPage";
 import { AdminCategoriesPage } from "@/features/admin/categories/pages/AdminCategoriesPage";
 import { CategoryFormPage } from "@/features/admin/categories/pages/CategoryFormPage";
 import { AdminEntrepreneurDetailPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneurDetailPage";
+import { EntrepreneurFormPage } from "@/features/admin/entrepreneurs/pages/EntrepreneurFormPage";
 import { AdminEntrepreneursPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneursPage";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
 import { AdminProductDetailPage } from "@/features/admin/products/pages/AdminProductDetailPage";
@@ -32,8 +37,8 @@ import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import { RoleRoute } from "@/routes/RoleRoute";
 
 const adminRoles = ["admin"] as const;
-const adminOrEditorRoles = ["admin", "editor"] as const;
 const editorRoles = ["editor"] as const;
+const adminOrEditorRoles = ["admin", "editor"] as const;
 
 const router = createBrowserRouter([
   {
@@ -80,6 +85,20 @@ const router = createBrowserRouter([
     path: paths.public.unauthorized,
     element: <UnauthorizedPage />,
   },
+
+  /**
+   * Redirects legacy temporales.
+   * Sirven para que URLs viejas no rompan después del cambio de lógica.
+   */
+  {
+    path: "/dashboard",
+    element: <Navigate to={paths.editor.dashboard} replace />,
+  },
+  {
+    path: "/dashboard/*",
+    element: <Navigate to={paths.editor.dashboard} replace />,
+  },
+
   {
     element: <ProtectedRoute />,
     children: [
@@ -130,6 +149,14 @@ const router = createBrowserRouter([
                 element: <AdminEntrepreneurDetailPage />,
               },
               {
+                path: paths.admin.newEntrepreneur,
+                element: <EntrepreneurFormPage />,
+              },
+              {
+                path: paths.admin.editEntrepreneur,
+                element: <EntrepreneurFormPage />,
+              },
+              {
                 path: paths.admin.products,
                 element: <AdminProductsPage />,
               },
@@ -170,6 +197,11 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+
+  {
+    path: "*",
+    element: <Navigate to={paths.public.home} replace />,
   },
 ]);
 

@@ -76,17 +76,6 @@ export type AdminEntrepreneur = {
 
   user?: AdminEntrepreneurUser | null;
   category?: AdminEntrepreneurCategory | null;
-
-  /**
-   * Legacy temporal.
-   * Se mantiene solo para no romper páginas antiguas mientras eliminamos businesses.
-   */
-  businesses?: {
-    id: string;
-    name: string;
-    slug: string;
-    status: string;
-  }[];
 };
 
 export type AdminEntrepreneurListQuery = {
@@ -112,6 +101,44 @@ export type AdminEntrepreneurListResponse = {
   items: AdminEntrepreneur[];
   pagination: AdminEntrepreneurPagination;
 };
+
+export type CreateEntrepreneurRequest = {
+  categoryId?: string | null;
+
+  firstName: string;
+  lastName: string;
+  fullName?: string | null;
+  slug: string;
+
+  documentType?: string | null;
+  documentNumber?: string | null;
+
+  shortBio?: string | null;
+  bio?: string | null;
+  personalStory?: string | null;
+  locationText?: string | null;
+
+  photoUrl?: string | null;
+  bannerUrl?: string | null;
+
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
+
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+  websiteUrl?: string | null;
+
+  status?: EntrepreneurStatus;
+};
+
+export type UpdateEntrepreneurRequest = Partial<CreateEntrepreneurRequest>;
 
 export type RejectEntrepreneurRequest = {
   rejectionReason: string;

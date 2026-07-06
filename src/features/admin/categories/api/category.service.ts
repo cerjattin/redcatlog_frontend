@@ -7,74 +7,99 @@ import type {
   UpdateCategoryStatusRequest,
 } from "@/features/admin/categories/types/category.types";
 
-type CategoryListEnvelope = {
-  success: boolean;
-  message: string;
-  data: Category[];
-};
+type UnknownRecord = Record<string, unknown>;
 
-type CategoryEnvelope = {
-  success: boolean;
-  message: string;
-  data: Category;
-};
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
 
-function buildQueryParams(filters: CategoryFilters) {
-  const params = new URLSearchParams();
+function cleanParams(params?: CategoryFilters) {
+  if (!params) {
+    return undefined;
+  }
 
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      params.set(key, String(value));
-    }
-  });
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => {
+      return value !== undefined && value !== null && value !== "";
+    }),
+  );
+}
 
-  return params.toString();
+function getDataFromPayload(payload: unknown) {
+  if (isRecord(payload) && "data" in payload) {
+    return payload.data;
+  }
+
+  return payload;
+}
+
+function normalizeCategoryList(payload: unknown): Category[] {
+  const data = getDataFromPayload(payload);
+
+  if (Array.isArray(data)) {
+    return data as Category[];
+  }
+
+  if (isRecord(data) && Array.isArray(data.items)) {
+    return data.items as Category[];
+  }
+
+  if (isRecord(data) && Array.isArray(data.categories)) {
+    return data.categories as Category[];
+  }
+
+  return [];
+}
+
+function normalizeCategory(payload: unknown): Category {
+  const data = getDataFromPayload(payload);
+
+  if (isRecord(data) && isRecord(data.category)) {
+    return data.category as Category;
+  }
+
+  return data as Category;
 }
 
 export const categoryService = {
-  async listCategories(filters: CategoryFilters = {}): Promise<Category[]> {
-    const query = buildQueryParams(filters);
+  async listCategories(params?: CategoryFilters): Promise<Category[]> {
+    const response = await api.get<unknown>("/categories", {
+      params: cleanParams(params),
+    });
 
-    const { data } = await api.get<CategoryListEnvelope>(
-      query ? `/categories?${query}` : "/categories",
-    );
-
-    return data.data;
+    return normalizeCategoryList(response.data);
   },
 
   async getCategoryById(id: string): Promise<Category> {
-    const { data } = await api.get<CategoryEnvelope>(`/categories/${id}`);
+    const response = await api.get<unknown>(`/categories/${id}`);
 
-    return data.data;
+    return normalizeCategory(response.data);
   },
 
   async createCategory(payload: CreateCategoryRequest): Promise<Category> {
-    const { data } = await api.post<CategoryEnvelope>("/categories", payload);
+    const response = await api.post<unknown>("/categories", payload);
 
-    return data.data;
+    return normalizeCategory(response.data);
   },
 
   async updateCategory(
     id: string,
     payload: Partial<CreateCategoryRequest>,
   ): Promise<Category> {
-    const { data } = await api.put<CategoryEnvelope>(
-      `/categories/${id}`,
-      payload,
-    );
+    const response = await api.put<unknown>(`/categories/${id}`, payload);
 
-    return data.data;
+    return normalizeCategory(response.data);
   },
 
   async updateCategoryStatus(
     id: string,
     payload: UpdateCategoryStatusRequest,
   ): Promise<Category> {
-    const { data } = await api.patch<CategoryEnvelope>(
+    const response = await api.patch<unknown>(
       `/categories/${id}/status`,
       payload,
     );
 
-    return data.data;
+    return normalizeCategory(response.data);
   },
 };

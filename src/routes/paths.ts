@@ -19,11 +19,14 @@ export const paths = {
 
   admin: {
     dashboard: "/admin",
+
     users: "/admin/users",
     userDetail: "/admin/users/:id",
 
     entrepreneurs: "/admin/entrepreneurs",
     entrepreneurDetail: "/admin/entrepreneurs/:id",
+    newEntrepreneur: "/admin/entrepreneurs/new",
+    editEntrepreneur: "/admin/entrepreneurs/:id/edit",
 
     products: "/admin/products",
     productDetail: "/admin/products/:id",
@@ -40,24 +43,5 @@ export const paths = {
 
   editor: {
     dashboard: "/editor",
-  },
-
-  /**
-   * Legacy temporal.
-   * Se elimina cuando terminemos de refactorizar features/products viejos.
-   */
-  entrepreneur: {
-    dashboard: "/dashboard",
-    profile: "/dashboard/profile",
-    editProfile: "/dashboard/profile/edit",
-    businesses: "/dashboard/businesses",
-    businessDetail: "/dashboard/businesses/:id",
-    editBusiness: "/dashboard/businesses/:id/edit",
-    newBusiness: "/dashboard/businesses/new",
-    products: "/dashboard/products",
-    productDetail: "/dashboard/products/:id",
-    editProduct: "/dashboard/products/:id/edit",
-    productImages: "/dashboard/products/:id/images",
-    newProduct: "/dashboard/products/new",
   },
 } as const;

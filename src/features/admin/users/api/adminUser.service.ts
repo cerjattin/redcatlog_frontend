@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+
 import type {
   AdminUser,
   AdminUsersListQuery,
@@ -6,58 +7,99 @@ import type {
   UpdateUserStatusPayload,
 } from "@/features/admin/users/types/adminUser.types";
 
-type AdminUsersListEnvelope = {
-  success: boolean;
-  message: string;
-  data: AdminUsersListResponse;
-};
+type UnknownRecord = Record<string, unknown>;
 
-type AdminUserEnvelope = {
-  success: boolean;
-  message: string;
-  data: AdminUser;
-};
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
 
-function buildQueryParams(query: AdminUsersListQuery) {
-  const params = new URLSearchParams();
+function cleanParams(params?: AdminUsersListQuery) {
+  if (!params) {
+    return undefined;
+  }
 
-  Object.entries(query).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      params.set(key, String(value));
-    }
-  });
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => {
+      return value !== undefined && value !== null && value !== "";
+    }),
+  );
+}
 
-  return params.toString();
+function getDataFromPayload(payload: unknown) {
+  if (isRecord(payload) && "data" in payload) {
+    return payload.data;
+  }
+
+  return payload;
+}
+
+function normalizeListResponse(payload: unknown): AdminUsersListResponse {
+  const data = getDataFromPayload(payload);
+
+  if (isRecord(data)) {
+    const items = Array.isArray(data.items)
+      ? (data.items as AdminUser[])
+      : Array.isArray(data.users)
+        ? (data.users as AdminUser[])
+        : [];
+
+    const paginationData = isRecord(data.pagination) ? data.pagination : null;
+
+    return {
+      items,
+      pagination: {
+        page: Number(paginationData?.page ?? 1),
+        limit: Number(paginationData?.limit ?? 10),
+        total: Number(paginationData?.total ?? items.length),
+        totalPages: Number(paginationData?.totalPages ?? 1),
+      },
+    };
+  }
+
+  return {
+    items: [],
+    pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1,
+    },
+  };
+}
+
+function normalizeUserResponse(payload: unknown): AdminUser {
+  const data = getDataFromPayload(payload);
+
+  if (isRecord(data) && isRecord(data.user)) {
+    return data.user as unknown as AdminUser;
+  }
+
+  return data as unknown as AdminUser;
 }
 
 export const adminUserService = {
   async listUsers(
-    query: AdminUsersListQuery = {},
+    params?: AdminUsersListQuery,
   ): Promise<AdminUsersListResponse> {
-    const queryString = buildQueryParams(query);
+    const response = await api.get<unknown>("/users", {
+      params: cleanParams(params),
+    });
 
-    const { data } = await api.get<AdminUsersListEnvelope>(
-      queryString ? `/users?${queryString}` : "/users",
-    );
-
-    return data.data;
+    return normalizeListResponse(response.data);
   },
 
   async getUserById(id: string): Promise<AdminUser> {
-    const { data } = await api.get<AdminUserEnvelope>(`/users/${id}`);
+    const response = await api.get<unknown>(`/users/${id}`);
 
-    return data.data;
+    return normalizeUserResponse(response.data);
   },
 
   async updateUserStatus(
     id: string,
     payload: UpdateUserStatusPayload,
   ): Promise<AdminUser> {
-    const { data } = await api.patch<AdminUserEnvelope>(
-      `/users/${id}/status`,
-      payload,
-    );
+    const response = await api.patch<unknown>(`/users/${id}/status`, payload);
 
-    return data.data;
+    return normalizeUserResponse(response.data);
   },
 };
