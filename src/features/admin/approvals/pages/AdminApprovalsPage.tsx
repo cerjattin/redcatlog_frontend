@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  BriefcaseBusiness,
-  Package,
-  UserRoundCheck,
-} from "lucide-react";
+import { ArrowRight, Package, UserRoundCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,8 +8,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { adminBusinessService } from "@/features/admin/businesses/api/adminBusiness.service";
-import type { AdminBusiness } from "@/features/admin/businesses/types/adminBusiness.types";
 import { adminEntrepreneurService } from "@/features/admin/entrepreneurs/api/adminEntrepreneur.service";
 import type { AdminEntrepreneur } from "@/features/admin/entrepreneurs/types/adminEntrepreneur.types";
 import { adminProductService } from "@/features/admin/products/api/adminProduct.service";
@@ -30,13 +23,14 @@ function getStatusLabel(status: string) {
     rejected: "Rechazado",
     inactive: "Inactivo",
     archived: "Archivado",
+    active: "Activo",
   };
 
   return labels[status] ?? status;
 }
 
 function getStatusVariant(status: string) {
-  if (status === "approved" || status === "published") {
+  if (status === "approved" || status === "published" || status === "active") {
     return "success";
   }
 
@@ -55,23 +49,63 @@ function getAdminProductDetailPath(id: string) {
   return paths.admin.productDetail.replace(":id", id);
 }
 
-function getAdminBusinessDetailPath(id: string) {
-  return paths.admin.businessDetail.replace(":id", id);
-}
-
 function getAdminEntrepreneurDetailPath(id: string) {
   return paths.admin.entrepreneurDetail.replace(":id", id);
+}
+
+function getProductEntrepreneurName(product: ProductSummary) {
+  const entrepreneur = product.entrepreneur;
+
+  if (!entrepreneur) {
+    return "Sin emprendedora";
+  }
+
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName = entrepreneur.firstName?.trim() ?? "";
+  const lastName = entrepreneur.lastName?.trim() ?? "";
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEntrepreneurName(entrepreneur: AdminEntrepreneur) {
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName =
+    entrepreneur.firstName?.trim() ??
+    entrepreneur.user?.firstName?.trim() ??
+    "";
+
+  const lastName =
+    entrepreneur.lastName?.trim() ?? entrepreneur.user?.lastName?.trim() ?? "";
+
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEntrepreneurEmail(entrepreneur: AdminEntrepreneur) {
+  return (
+    entrepreneur.email ?? entrepreneur.user?.email ?? "Correo no registrado"
+  );
 }
 
 export function AdminApprovalsPage() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<ProductSummary[]>([]);
-  const [businesses, setBusinesses] = useState<AdminBusiness[]>([]);
   const [entrepreneurs, setEntrepreneurs] = useState<AdminEntrepreneur[]>([]);
 
   const [productTotal, setProductTotal] = useState(0);
-  const [businessTotal, setBusinessTotal] = useState(0);
   const [entrepreneurTotal, setEntrepreneurTotal] = useState(0);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -82,31 +116,23 @@ export function AdminApprovalsPage() {
       setIsLoading(true);
       setError(null);
 
-      const [productResponse, businessResponse, entrepreneurResponse] =
-        await Promise.all([
-          adminProductService.listProducts({
-            page: 1,
-            limit: 5,
-            status: "pending_review",
-          }),
-          adminBusinessService.listBusinesses({
-            page: 1,
-            limit: 5,
-            status: "pending_review",
-          }),
-          adminEntrepreneurService.listEntrepreneurs({
-            page: 1,
-            limit: 5,
-            status: "pending_review",
-          }),
-        ]);
+      const [productResponse, entrepreneurResponse] = await Promise.all([
+        adminProductService.listProducts({
+          page: 1,
+          limit: 5,
+          status: "pending_review",
+        }),
+        adminEntrepreneurService.listEntrepreneurs({
+          page: 1,
+          limit: 5,
+          status: "pending_review",
+        }),
+      ]);
 
       setProducts(productResponse.items);
-      setBusinesses(businessResponse.items);
       setEntrepreneurs(entrepreneurResponse.items);
 
       setProductTotal(productResponse.pagination.total);
-      setBusinessTotal(businessResponse.pagination.total);
       setEntrepreneurTotal(entrepreneurResponse.pagination.total);
     } catch {
       setError("No fue posible cargar el centro de aprobaciones.");
@@ -132,17 +158,17 @@ export function AdminApprovalsPage() {
     );
   }
 
-  const totalPending = productTotal + businessTotal + entrepreneurTotal;
+  const totalPending = productTotal + entrepreneurTotal;
 
   return (
     <section>
       <PageHeader
         eyebrow="Administración"
         title="Centro de aprobaciones"
-        description="Revisa rápidamente los productos, emprendimientos y perfiles pendientes de validación."
+        description="Revisa productos y perfiles de emprendedoras pendientes de validación."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
@@ -152,19 +178,6 @@ export function AdminApprovalsPage() {
             <div>
               <p className="text-sm text-ink-500">Productos pendientes</p>
               <strong className="text-2xl text-ink-900">{productTotal}</strong>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
-              <BriefcaseBusiness className="h-6 w-6" />
-            </div>
-
-            <div>
-              <p className="text-sm text-ink-500">Emprendimientos pendientes</p>
-              <strong className="text-2xl text-ink-900">{businessTotal}</strong>
             </div>
           </div>
         </Card>
@@ -189,12 +202,12 @@ export function AdminApprovalsPage() {
         <div className="mt-5">
           <EmptyState
             title="No hay aprobaciones pendientes"
-            description="En este momento no hay productos, emprendimientos ni perfiles pendientes de revisión."
+            description="En este momento no hay productos ni perfiles de emprendedoras pendientes de revisión."
           />
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-3">
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <Card>
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -231,8 +244,9 @@ export function AdminApprovalsPage() {
                       <p className="font-semibold text-ink-900">
                         {product.name}
                       </p>
+
                       <p className="mt-1 text-xs text-ink-500">
-                        {product.business?.name ?? "Sin emprendimiento"}
+                        {getProductEntrepreneurName(product)}
                       </p>
                     </div>
 
@@ -250,69 +264,6 @@ export function AdminApprovalsPage() {
             </div>
           ) : (
             <p className="text-sm text-ink-500">No hay productos pendientes.</p>
-          )}
-        </Card>
-
-        <Card>
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-ink-900">
-                Emprendimientos
-              </h2>
-              <p className="mt-1 text-sm text-ink-500">
-                Últimos emprendimientos pendientes.
-              </p>
-            </div>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                navigate(`${paths.admin.businesses}?status=pending_review`)
-              }
-            >
-              Ver todos
-            </Button>
-          </div>
-
-          {businesses.length > 0 ? (
-            <div className="space-y-3">
-              {businesses.map((business) => (
-                <button
-                  key={business.id}
-                  type="button"
-                  className="w-full rounded-2xl border border-ink-100 bg-ink-50 p-4 text-left transition hover:bg-white hover:shadow-sm"
-                  onClick={() =>
-                    navigate(getAdminBusinessDetailPath(business.id))
-                  }
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-ink-900">
-                        {business.name}
-                      </p>
-                      <p className="mt-1 text-xs text-ink-500">
-                        {business.city ?? "Ciudad no registrada"}
-                        {business.department ? `, ${business.department}` : ""}
-                      </p>
-                    </div>
-
-                    <Badge variant={getStatusVariant(business.status)}>
-                      {getStatusLabel(business.status)}
-                    </Badge>
-                  </div>
-
-                  <div className="mt-3 flex items-center text-xs font-semibold text-primary-600">
-                    Revisar emprendimiento
-                    <ArrowRight className="ml-1 h-3 w-3" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-ink-500">
-              No hay emprendimientos pendientes.
-            </p>
           )}
         </Card>
 
@@ -338,42 +289,37 @@ export function AdminApprovalsPage() {
 
           {entrepreneurs.length > 0 ? (
             <div className="space-y-3">
-              {entrepreneurs.map((entrepreneur) => {
-                const user = entrepreneur.user;
+              {entrepreneurs.map((entrepreneur) => (
+                <button
+                  key={entrepreneur.id}
+                  type="button"
+                  className="w-full rounded-2xl border border-ink-100 bg-ink-50 p-4 text-left transition hover:bg-white hover:shadow-sm"
+                  onClick={() =>
+                    navigate(getAdminEntrepreneurDetailPath(entrepreneur.id))
+                  }
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-ink-900">
+                        {getEntrepreneurName(entrepreneur)}
+                      </p>
 
-                return (
-                  <button
-                    key={entrepreneur.id}
-                    type="button"
-                    className="w-full rounded-2xl border border-ink-100 bg-ink-50 p-4 text-left transition hover:bg-white hover:shadow-sm"
-                    onClick={() =>
-                      navigate(getAdminEntrepreneurDetailPath(entrepreneur.id))
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-ink-900">
-                          {user
-                            ? `${user.firstName} ${user.lastName}`
-                            : "Usuario no registrado"}
-                        </p>
-                        <p className="mt-1 text-xs text-ink-500">
-                          {user?.email ?? "Correo no registrado"}
-                        </p>
-                      </div>
-
-                      <Badge variant={getStatusVariant(entrepreneur.status)}>
-                        {getStatusLabel(entrepreneur.status)}
-                      </Badge>
+                      <p className="mt-1 text-xs text-ink-500">
+                        {getEntrepreneurEmail(entrepreneur)}
+                      </p>
                     </div>
 
-                    <div className="mt-3 flex items-center text-xs font-semibold text-primary-600">
-                      Revisar emprendedora
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </div>
-                  </button>
-                );
-              })}
+                    <Badge variant={getStatusVariant(entrepreneur.status)}>
+                      {getStatusLabel(entrepreneur.status)}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 flex items-center text-xs font-semibold text-primary-600">
+                    Revisar emprendedora
+                    <ArrowRight className="ml-1 h-3 w-3" />
+                  </div>
+                </button>
+              ))}
             </div>
           ) : (
             <p className="text-sm text-ink-500">

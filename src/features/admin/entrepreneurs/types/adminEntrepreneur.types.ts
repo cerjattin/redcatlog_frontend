@@ -3,7 +3,8 @@ export type EntrepreneurStatus =
   | "pending_review"
   | "approved"
   | "rejected"
-  | "inactive";
+  | "inactive"
+  | "active";
 
 export type AdminEntrepreneurUser = {
   id: string;
@@ -21,40 +22,71 @@ export type AdminEntrepreneurUser = {
   } | null;
 };
 
-export type AdminEntrepreneurBusinessSummary = {
+export type AdminEntrepreneurCategory = {
   id: string;
   name: string;
   slug: string;
-  status: string;
 };
 
 export type AdminEntrepreneur = {
   id: string;
-  userId: string;
+  userId?: string | null;
+  categoryId?: string | null;
 
-  documentType: string | null;
-  documentNumber: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  slug?: string | null;
 
-  personalStory: string | null;
-  shortBio: string | null;
-  locationText: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
 
-  city: string | null;
-  department: string | null;
-  country: string | null;
+  personalStory?: string | null;
+  shortBio?: string | null;
+  bio?: string | null;
+  locationText?: string | null;
+
+  photoUrl?: string | null;
+  profilePhotoUrl?: string | null;
+  bannerUrl?: string | null;
+
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+  websiteUrl?: string | null;
+
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
 
   status: EntrepreneurStatus;
 
-  approvedAt: string | null;
-  approvedBy: string | null;
-  rejectedAt: string | null;
-  rejectionReason: string | null;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 
-  user: AdminEntrepreneurUser | null;
-  businesses: AdminEntrepreneurBusinessSummary[];
+  user?: AdminEntrepreneurUser | null;
+  category?: AdminEntrepreneurCategory | null;
+
+  /**
+   * Legacy temporal.
+   * Se mantiene solo para no romper páginas antiguas mientras eliminamos businesses.
+   */
+  businesses?: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+  }[];
 };
 
 export type AdminEntrepreneurListQuery = {
@@ -63,6 +95,7 @@ export type AdminEntrepreneurListQuery = {
   status?: EntrepreneurStatus | string;
   city?: string;
   department?: string;
+  categoryId?: string;
   search?: string;
 };
 
@@ -71,6 +104,8 @@ export type AdminEntrepreneurPagination = {
   limit: number;
   total: number;
   totalPages: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 };
 
 export type AdminEntrepreneurListResponse = {
