@@ -1,15 +1,15 @@
 import {
   ArrowRight,
-  Heart,
-  Lightbulb,
+  HeartHandshake,
   MapPin,
   Package,
-  ShoppingBag,
+  Search,
+  ShieldCheck,
   Sparkles,
+  Tags,
   UsersRound,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { publicBusinessService } from "@/features/public/api/publicBusiness.service";
@@ -21,221 +21,211 @@ import type {
   PublicProductCategory,
 } from "@/features/public/types/publicProduct.types";
 import {
+  buildPublicBusinessWhatsappUrl,
+  getPublicBusinessBannerUrl,
+  getPublicBusinessCategoryName,
+  getPublicBusinessDescription,
+  getPublicBusinessLocation,
+  getPublicBusinessLogoUrl,
+  getPublicBusinessName,
+  getPublicBusinessProductsCount,
+} from "@/features/public/utils/businessDisplay";
+import {
   formatPublicProductPrice,
+  getPublicProductEntrepreneurName,
+  getPublicProductLocation,
   getPublicProductMainImage,
+  getPublicProductWhatsappPhone,
 } from "@/features/public/utils/productDisplay";
+import { buildWhatsappUrl } from "@/features/public/utils/whatsapp";
 import { paths } from "@/routes/paths";
 
 type HomeCategory = {
-  id: string | null;
-  title: string;
-  subtitle: string;
-  image: string;
+  id: string;
+  name: string;
+  slug: string;
+  productsCount: number;
 };
 
 const fallbackCategories: HomeCategory[] = [
   {
-    id: null,
-    title: "Artesanías",
-    subtitle: "Piezas hechas a mano",
-    image: "/home/product-1.jpg",
+    id: "",
+    name: "Artesanías",
+    slug: "artesanias",
+    productsCount: 0,
   },
   {
-    id: null,
-    title: "Gastronomía",
-    subtitle: "Sabores tradicionales",
-    image: "/home/product-2.jpg",
+    id: "",
+    name: "Gastronomía",
+    slug: "gastronomia",
+    productsCount: 0,
   },
   {
-    id: null,
-    title: "Belleza",
-    subtitle: "Productos naturales",
-    image: "/home/product-3.jpg",
+    id: "",
+    name: "Belleza",
+    slug: "belleza",
+    productsCount: 0,
   },
   {
-    id: null,
-    title: "Moda",
-    subtitle: "Diseños únicos",
-    image: "/home/product-4.jpg",
+    id: "",
+    name: "Moda",
+    slug: "moda",
+    productsCount: 0,
   },
 ];
 
-const categoryImageBySlug: Record<string, string> = {
-  artesanias: "/home/category-crafts.jpg",
-  gastronomia: "/home/category-food.jpg",
-  belleza: "/home/category-beauty.jpg",
-  moda: "/home/category-fashion.jpg",
-  hogar: "/home/product-1.jpg",
-};
-
-function normalizeSlug(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function getCategoryImage(category: PublicProductCategory) {
-  const slug = category.slug || normalizeSlug(category.name);
-
-  return categoryImageBySlug[slug] ?? "/home/product-1.jpg";
-}
-
 function buildHomeCategories(products: PublicProduct[]): HomeCategory[] {
-  const categoryMap = new Map<string, PublicProductCategory>();
+  const categoryMap = new Map<string, HomeCategory>();
 
   products.forEach((product) => {
-    if (product.category?.id) {
-      categoryMap.set(product.category.id, product.category);
+    const category = product.category;
+
+    if (!category?.id) {
+      return;
     }
+
+    const current = categoryMap.get(category.id);
+
+    if (current) {
+      categoryMap.set(category.id, {
+        ...current,
+        productsCount: current.productsCount + 1,
+      });
+
+      return;
+    }
+
+    categoryMap.set(category.id, {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      productsCount: 1,
+    });
   });
 
-  const categories = Array.from(categoryMap.values()).slice(0, 4);
+  const categories = Array.from(categoryMap.values()).sort((first, second) => {
+    return second.productsCount - first.productsCount;
+  });
 
-  if (categories.length === 0) {
-    return fallbackCategories;
-  }
-
-  return categories.map((category) => ({
-    id: category.id,
-    title: category.name,
-    subtitle: "Explora productos de esta categoría",
-    image: getCategoryImage(category),
-  }));
+  return categories.length > 0 ? categories.slice(0, 6) : fallbackCategories;
 }
 
-function formatStatValue(value: number) {
-  if (value <= 0) {
-    return "0";
-  }
-
-  return value >= 1000 ? `${Math.floor(value / 100) / 10}k+` : `${value}`;
-}
-
-function getUniqueCitiesCount(businesses: PublicBusiness[]) {
+function getUniqueCitiesCount(entrepreneurs: PublicBusiness[]) {
   const cities = new Set<string>();
 
-  businesses.forEach((business) => {
-    const city = business.city ?? business.entrepreneur?.city;
+  entrepreneurs.forEach((entrepreneur) => {
+    const location =
+      entrepreneur.city || entrepreneur.locationText || entrepreneur.department;
 
-    if (city) {
-      cities.add(city.trim().toLowerCase());
+    if (location) {
+      cities.add(location.trim().toLowerCase());
     }
   });
 
   return cities.size;
 }
 
-function SectionHeading({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="mb-11 text-center">
-      <h2 className="text-3xl font-bold leading-tight text-[#211734] md:text-[40px]">
-        {title}
-      </h2>
-      <p className="mt-3 text-base text-[#6d6383] md:text-xl">{subtitle}</p>
-    </div>
-  );
+function getCategoryHref(category: HomeCategory | PublicProductCategory) {
+  if (!category.id) {
+    return paths.public.catalog;
+  }
+
+  return `${paths.public.catalog}?categoryId=${category.id}`;
 }
 
-function PillLink({
-  children,
-  to,
-  light = false,
-}: {
-  children: ReactNode;
-  to: string;
-  light?: boolean;
-}) {
-  return (
-    <Link
-      to={to}
-      className={`inline-flex items-center rounded-full px-6 py-3.5 text-sm font-bold shadow-[0_10px_20px_rgba(58,36,103,.14)] transition ${
-        light
-          ? "bg-white text-[#7044c9] hover:bg-[#faf7ff]"
-          : "bg-[#211734] text-white hover:bg-[#3a2467]"
-      }`}
-    >
-      {children}
-      <ArrowRight size={17} className="ml-2" />
-    </Link>
-  );
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
 }
 
 function Hero() {
   return (
-    <section
-      id="inicio"
-      className="relative overflow-hidden bg-[linear-gradient(115deg,#fff5f6_0%,#fff_48%,#f4e9ff_100%)]"
-    >
-      <div className="mx-auto grid min-h-[796px] max-w-[1224px] items-center gap-10 px-5 py-16 lg:grid-cols-[.92fr_1.08fr] lg:px-0 lg:py-12">
-        <div className="relative z-10">
-          <h1 className="max-w-[620px] text-[46px] font-bold leading-[.98] tracking-[-.03em] text-[#3a2467] sm:text-6xl lg:text-[72px]">
-            Transformando historias en{" "}
-            <span className="text-[#d94673]">oportunidades</span>
+    <section className="relative overflow-hidden bg-[#f8f3ff]">
+      <div className="absolute left-[-10rem] top-[-10rem] h-80 w-80 rounded-full bg-[#dfc8ff]/60 blur-3xl" />
+      <div className="absolute bottom-[-12rem] right-[-10rem] h-96 w-96 rounded-full bg-[#f7b6d2]/50 blur-3xl" />
+
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-16 md:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
+        <div>
+          <span className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#7b3fe4] shadow-sm">
+            <Sparkles className="mr-2 h-4 w-4" />
+            Catálogo digital con propósito
+          </span>
+
+          <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight text-[#211734] md:text-6xl">
+            Productos creados por mujeres que transforman historias en
+            oportunidades.
           </h1>
 
-          <p className="mt-8 max-w-[560px] text-lg leading-[1.45] text-[#6d6383] md:text-xl">
-            Descubre emprendimientos únicos creados por mujeres extraordinarias.
-            Cada producto cuenta una historia de resiliencia, creatividad y
-            esperanza.
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#6d6383]">
+            REDMUEMMA conecta a emprendedoras con compradores, instituciones y
+            comunidades que valoran el talento, la resiliencia y el comercio con
+            impacto social.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            <PillLink to={paths.public.catalog}>
-              Explorar catálogo <ShoppingBag size={17} className="ml-2" />
-            </PillLink>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              to={paths.public.catalog}
+              className="inline-flex items-center justify-center rounded-2xl bg-[#7b3fe4] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#7b3fe4]/20 transition hover:-translate-y-0.5 hover:bg-[#6b31d2]"
+            >
+              Ver catálogo
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
 
             <Link
               to={paths.public.entrepreneurs}
-              className="inline-flex items-center rounded-full border border-[#b9aec9] bg-white px-6 py-3.5 text-sm font-semibold text-[#3a2467] shadow-sm transition hover:border-[#d66eff]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[#ded4ef] bg-white px-6 py-3 text-sm font-bold text-[#35264d] transition hover:-translate-y-0.5 hover:border-[#c7b4e8]"
             >
-              Conocer emprendimientos
+              Conocer emprendedoras
             </Link>
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[650px]">
-          <div className="absolute right-0 top-[22%] h-20 w-20 rounded-[28px] bg-[#ff7da5] opacity-90" />
+        <div className="rounded-[2rem] border border-white/80 bg-white/70 p-4 shadow-2xl shadow-[#7b3fe4]/10 backdrop-blur">
+          <div className="rounded-[1.5rem] bg-gradient-to-br from-[#7b3fe4] via-[#9b5cff] to-[#f36ca5] p-6 text-white">
+            <div className="flex items-center justify-between">
+              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
+                REDMUEMMA
+              </span>
 
-          <img
-            src="/home/hero.png"
-            alt="Emprendedora sonriendo"
-            className="relative z-10 w-full"
-          />
-
-          <div className="absolute bottom-[8%] left-[2%] z-20 rounded-3xl bg-[#d66eff] p-5 text-white shadow-xl">
-            <div className="flex items-center gap-2 text-lg font-bold">
-              <ShoppingBag size={22} /> Apoya
-              <br />
-              marcas locales
+              <HeartHandshake className="h-8 w-8" />
             </div>
 
-            <div className="mt-3 rounded-full bg-white/25 px-3 py-1 text-xs">
-              Hecho 100% colombiano
-            </div>
-          </div>
+            <h2 className="mt-16 text-3xl font-black">
+              Una vitrina para vender, visibilizar y crecer.
+            </h2>
 
-          <div className="absolute right-0 top-[43%] z-20 rounded-2xl bg-[#ff9a82] px-4 py-3 text-sm font-bold leading-none text-[#3a2467] shadow-lg">
-            Llenas de
-            <br />
-            creatividad
-            <br />y cultura
+            <p className="mt-4 text-sm leading-6 text-white/85">
+              Productos con historia, contacto directo por WhatsApp y perfiles
+              de emprendedoras organizados por categoría.
+            </p>
+
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
+                <Package className="h-6 w-6" />
+                <p className="mt-3 text-sm font-bold">Catálogo activo</p>
+              </div>
+
+              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
+                <UsersRound className="h-6 w-6" />
+                <p className="mt-3 text-sm font-bold">Mujeres visibles</p>
+              </div>
+
+              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
+                <Tags className="h-6 w-6" />
+                <p className="mt-3 text-sm font-bold">Categorías</p>
+              </div>
+
+              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
+                <ShieldCheck className="h-6 w-6" />
+                <p className="mt-3 text-sm font-bold">Gestión editorial</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="absolute bottom-0 left-0 flex items-end gap-3 opacity-80">
-        <span className="h-14 w-14 rounded-full bg-[#94aefa]" />
-        <span className="h-16 w-20 bg-[#ff9e83]" />
-        <span className="h-20 w-20 bg-[#d66eff] [clip-path:polygon(0_0,100%_100%,0_100%)]" />
       </div>
     </section>
   );
@@ -243,67 +233,63 @@ function Hero() {
 
 function Impact({
   productsTotal,
-  businessesTotal,
+  entrepreneursTotal,
+  categoriesTotal,
   citiesTotal,
 }: {
   productsTotal: number;
-  businessesTotal: number;
+  entrepreneursTotal: number;
+  categoriesTotal: number;
   citiesTotal: number;
 }) {
-  const stats = [
+  const items = [
     {
-      value: formatStatValue(businessesTotal),
-      label: "Emprendimientos",
-      icon: <UsersRound />,
-    },
-    {
-      value: formatStatValue(productsTotal),
       label: "Productos publicados",
-      icon: <Package />,
+      value: productsTotal,
+      icon: Package,
     },
     {
-      value: formatStatValue(businessesTotal),
-      label: "Marcas visibles",
-      icon: <Heart />,
+      label: "Emprendedoras visibles",
+      value: entrepreneursTotal,
+      icon: UsersRound,
     },
     {
-      value: formatStatValue(citiesTotal),
-      label: "Ciudades",
-      icon: <MapPin />,
+      label: "Categorías activas",
+      value: categoriesTotal,
+      icon: Tags,
+    },
+    {
+      label: "Territorios representados",
+      value: citiesTotal,
+      icon: MapPin,
     },
   ];
 
   return (
-    <section className="relative bg-[#fff0f3] py-14">
-      <div className="mx-auto grid max-w-[1224px] gap-10 px-5 lg:grid-cols-[1fr_1.6fr] lg:px-0">
-        <div>
-          <h2 className="text-3xl font-bold leading-tight text-[#211734]">
-            Emprendimientos que están
-            <br className="hidden sm:block" /> causando un impacto
-          </h2>
+    <section className="mx-auto max-w-7xl px-5 py-10 md:px-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((item) => {
+          const Icon = item.icon;
 
-          <p className="mt-3 text-lg text-[#6d6383]">
-            Gracias a tu apoyo y la creatividad
-            <br className="hidden sm:block" /> de las mujeres emprendedoras de
-            esta red.
-          </p>
-        </div>
+          return (
+            <div
+              key={item.label}
+              className="rounded-3xl border border-[#efe8f8] bg-white p-6 shadow-sm"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ecff] text-[#7b3fe4]">
+                <Icon className="h-6 w-6" />
+              </div>
 
-        <div className="grid grid-cols-2 gap-7 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#d94673]">
-                {stat.icon}
-              </span>
-
-              <strong className="mt-3 block text-3xl text-[#211734]">
-                {stat.value}
+              <strong className="mt-5 block text-3xl font-black text-[#211734]">
+                {item.value}
               </strong>
 
-              <span className="text-xs text-[#6d6383]">{stat.label}</span>
+              <p className="mt-1 text-sm font-medium text-[#6d6383]">
+                {item.label}
+              </p>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -311,37 +297,191 @@ function Impact({
 
 function Categories({ categories }: { categories: HomeCategory[] }) {
   return (
-    <section
-      id="categorias"
-      className="relative overflow-hidden bg-[linear-gradient(180deg,#fff8f5_0%,#fff8f5_48%,#fff4ef_100%)] py-20 md:py-24"
-    >
-      <div className="mx-auto max-w-[1224px] px-5 lg:px-0">
-        <SectionHeading
-          title="Explora por Categorías"
-          subtitle="Descubre la diversidad de talento y creatividad en cada categoría"
+    <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <span className="text-sm font-bold uppercase tracking-[0.25em] text-[#7b3fe4]">
+            Explora
+          </span>
+
+          <h2 className="mt-3 text-3xl font-black text-[#211734] md:text-4xl">
+            Categorías de productos
+          </h2>
+
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6d6383]">
+            Encuentra productos publicados por las emprendedoras de REDMUEMMA
+            según su categoría.
+          </p>
+        </div>
+
+        <Link
+          to={paths.public.catalog}
+          className="inline-flex items-center text-sm font-bold text-[#7b3fe4]"
+        >
+          Ver todo el catálogo
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {categories.map((category) => (
+          <Link
+            key={`${category.id}-${category.slug}`}
+            to={getCategoryHref(category)}
+            className="group rounded-3xl border border-[#efe8f8] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-[#7b3fe4]/10"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4ecff] text-[#7b3fe4] transition group-hover:bg-[#7b3fe4] group-hover:text-white">
+              <Tags className="h-6 w-6" />
+            </div>
+
+            <h3 className="mt-5 text-xl font-black text-[#211734]">
+              {category.name}
+            </h3>
+
+            <p className="mt-2 text-sm text-[#6d6383]">
+              {category.productsCount > 0
+                ? `${category.productsCount} producto${
+                    category.productsCount === 1 ? "" : "s"
+                  }`
+                : "Explorar productos"}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EntrepreneurCard({ entrepreneur }: { entrepreneur: PublicBusiness }) {
+  const name = getPublicBusinessName(entrepreneur);
+  const logoUrl = getPublicBusinessLogoUrl(entrepreneur);
+  const bannerUrl = getPublicBusinessBannerUrl(entrepreneur);
+  const location = getPublicBusinessLocation(entrepreneur);
+  const categoryName = getPublicBusinessCategoryName(entrepreneur);
+  const whatsappUrl = buildPublicBusinessWhatsappUrl(entrepreneur);
+  const productsCount = getPublicBusinessProductsCount(entrepreneur);
+
+  return (
+    <article className="overflow-hidden rounded-3xl border border-[#efe8f8] bg-white shadow-sm">
+      {bannerUrl ? (
+        <img
+          src={bannerUrl}
+          alt={`Banner de ${name}`}
+          className="h-36 w-full object-cover"
         />
+      ) : (
+        <div className="h-36 bg-gradient-to-br from-[#7b3fe4] via-[#a36cff] to-[#f36ca5]" />
+      )}
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((category) => (
-            <Link
-              key={`${category.id ?? category.title}`}
-              to={paths.public.catalog}
-              className="group relative h-[430px] overflow-hidden rounded-[28px] shadow-[0_16px_30px_rgba(58,36,103,.18)]"
+      <div className="p-5">
+        <div className="-mt-14 flex items-end justify-between gap-4">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`Foto de ${name}`}
+              className="h-20 w-20 rounded-2xl border-4 border-white bg-white object-cover shadow-md"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white bg-[#f4ecff] text-lg font-black text-[#7b3fe4] shadow-md">
+              {getInitials(name) || "R"}
+            </div>
+          )}
+
+          <span className="rounded-full bg-[#f4ecff] px-3 py-1 text-xs font-bold text-[#7b3fe4]">
+            {productsCount} producto{productsCount === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <h3 className="mt-4 text-xl font-black text-[#211734]">{name}</h3>
+
+        <p className="mt-1 text-sm font-semibold text-[#8e80aa]">
+          {categoryName}
+        </p>
+
+        {location ? (
+          <p className="mt-2 flex items-center text-sm text-[#6d6383]">
+            <MapPin className="mr-2 h-4 w-4" />
+            {location}
+          </p>
+        ) : null}
+
+        <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#6d6383]">
+          {getPublicBusinessDescription(entrepreneur)}
+        </p>
+
+        <div className="mt-5 flex gap-3">
+          <Link
+            to={paths.public.entrepreneurs}
+            className="inline-flex flex-1 items-center justify-center rounded-2xl border border-[#ded4ef] bg-white px-4 py-3 text-sm font-bold text-[#35264d] transition hover:border-[#c7b4e8]"
+          >
+            Ver perfil
+          </Link>
+
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#25d366] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#1db954]"
             >
-              <img
-                src={category.image}
-                alt={category.title}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              />
+              WhatsApp
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3a2467]/90 via-transparent to-transparent" />
+function Entrepreneurs({
+  entrepreneurs,
+  isLoading,
+}: {
+  entrepreneurs: PublicBusiness[];
+  isLoading: boolean;
+}) {
+  return (
+    <section className="bg-[#fbf8ff] py-14">
+      <div className="mx-auto max-w-7xl px-5 md:px-8">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <span className="text-sm font-bold uppercase tracking-[0.25em] text-[#7b3fe4]">
+              Historias
+            </span>
 
-              <div className="absolute bottom-0 p-6 text-white">
-                <h3 className="text-2xl font-bold">{category.title}</h3>
-                <p className="mt-1">{category.subtitle}</p>
-              </div>
-            </Link>
-          ))}
+            <h2 className="mt-3 text-3xl font-black text-[#211734] md:text-4xl">
+              Emprendedoras destacadas
+            </h2>
+
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6d6383]">
+              Conoce mujeres que hacen parte de REDMUEMMA y descubre sus
+              productos, datos de contacto y redes sociales.
+            </p>
+          </div>
+
+          <Link
+            to={paths.public.entrepreneurs}
+            className="inline-flex items-center text-sm font-bold text-[#7b3fe4]"
+          >
+            Ver todas
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {isLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-96 animate-pulse rounded-3xl bg-white"
+                />
+              ))
+            : entrepreneurs.map((entrepreneur) => (
+                <EntrepreneurCard
+                  key={entrepreneur.id}
+                  entrepreneur={entrepreneur}
+                />
+              ))}
         </div>
       </div>
     </section>
@@ -350,25 +490,76 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
 
 function ProductCard({ product }: { product: PublicProduct }) {
   const imageUrl = getPublicProductMainImage(product);
-  const price = formatPublicProductPrice(product);
-  const businessName = product.business?.name ?? "Emprendimiento";
+  const entrepreneurName = getPublicProductEntrepreneurName(product);
+  const location = getPublicProductLocation(product);
+  const whatsappPhone = getPublicProductWhatsappPhone(product);
+  const whatsappUrl = buildWhatsappUrl({
+    phone: whatsappPhone,
+    productName: product.name,
+    businessName: entrepreneurName,
+  });
 
   return (
-    <article className="overflow-hidden rounded-[24px] bg-[#fffafb] shadow-[0_10px_24px_rgba(58,36,103,.08)]">
-      <img
-        src={imageUrl}
-        alt={product.images?.[0]?.altText ?? product.name}
-        className="h-52 w-full object-cover sm:h-72"
-      />
+    <article className="overflow-hidden rounded-3xl border border-[#efe8f8] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-[#7b3fe4]/10">
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt={product.name}
+          className="h-56 w-full object-cover"
+        />
 
-      <div className="p-4">
-        <p className="text-xs text-[#8e80aa]">Por {businessName}</p>
+        {product.category?.name ? (
+          <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#7b3fe4] shadow-sm">
+            {product.category.name}
+          </span>
+        ) : null}
+      </div>
 
-        <strong className="mt-3 block text-xl text-[#7044c9]">{price}</strong>
-
-        <p className="mt-1 line-clamp-2 text-sm text-[#6d6383]">
+      <div className="p-5">
+        <h3 className="line-clamp-2 text-xl font-black text-[#211734]">
           {product.name}
+        </h3>
+
+        <p className="mt-2 text-sm font-semibold text-[#8e80aa]">
+          Por {entrepreneurName}
         </p>
+
+        {location ? (
+          <p className="mt-2 flex items-center text-sm text-[#6d6383]">
+            <MapPin className="mr-2 h-4 w-4" />
+            {location}
+          </p>
+        ) : null}
+
+        <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#6d6383]">
+          {product.shortDescription ||
+            product.description ||
+            "Producto publicado en REDMUEMMA."}
+        </p>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <strong className="text-lg font-black text-[#211734]">
+            {formatPublicProductPrice(product)}
+          </strong>
+
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#25d366] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#1db954]"
+            >
+              Consultar
+            </a>
+          ) : (
+            <Link
+              to={paths.public.catalog}
+              className="inline-flex items-center justify-center rounded-2xl border border-[#ded4ef] px-4 py-2.5 text-sm font-bold text-[#35264d]"
+            >
+              Ver catálogo
+            </Link>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -382,45 +573,43 @@ function Products({
   isLoading: boolean;
 }) {
   return (
-    <section id="productos" className="bg-white py-20 md:py-24">
-      <div className="mx-auto max-w-[1224px] px-5 lg:px-0">
-        <SectionHeading
-          title="Productos Destacados"
-          subtitle="Cada pieza es única y lleva consigo una historia de superación"
-        />
+    <section className="mx-auto max-w-7xl px-5 py-14 md:px-8">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <span className="text-sm font-bold uppercase tracking-[0.25em] text-[#7b3fe4]">
+            Catálogo
+          </span>
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <article
-                key={`product-home-skeleton-${index}`}
-                className="overflow-hidden rounded-[24px] bg-[#fffafb]"
-              >
-                <div className="h-52 animate-pulse bg-[#f3edf7] sm:h-72" />
-                <div className="space-y-3 p-4">
-                  <div className="h-5 w-28 animate-pulse rounded-xl bg-[#f3edf7]" />
-                  <div className="h-6 w-20 animate-pulse rounded-xl bg-[#f3edf7]" />
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-            {products.map((product) => (
+          <h2 className="mt-3 text-3xl font-black text-[#211734] md:text-4xl">
+            Productos destacados
+          </h2>
+
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6d6383]">
+            Explora productos publicados por las emprendedoras de REDMUEMMA y
+            contáctalas directamente.
+          </p>
+        </div>
+
+        <Link
+          to={paths.public.catalog}
+          className="inline-flex items-center text-sm font-bold text-[#7b3fe4]"
+        >
+          Ir al catálogo
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-96 animate-pulse rounded-3xl bg-[#f4ecff]"
+              />
+            ))
+          : products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
-        ) : (
-          <div className="rounded-[28px] bg-[#fffafb] px-6 py-12 text-center text-[#6d6383]">
-            Aún no hay productos publicados.
-          </div>
-        )}
-
-        <div className="mt-12 text-center">
-          <PillLink to={paths.public.catalog}>
-            Explora todos los productos
-          </PillLink>
-        </div>
       </div>
     </section>
   );
@@ -428,55 +617,56 @@ function Products({
 
 function Story() {
   return (
-    <section
-      id="historia"
-      className="relative overflow-hidden bg-[#3a2467] py-20 text-white md:py-24"
-    >
-      <div className="mx-auto grid max-w-[1224px] items-center gap-14 px-5 lg:grid-cols-2 lg:px-0">
-        <div>
-          <img
-            src="/home/story.jpg"
-            alt="Mujeres emprendedoras"
-            className="h-[430px] w-full rounded-[28px] object-cover object-[35%_center]"
-          />
+    <section className="bg-[#211734] py-16 text-white">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="rounded-[2rem] bg-white/10 p-6">
+          <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-6">
+            <HeartHandshake className="h-10 w-10 text-[#f6c6dc]" />
 
-          <div className="mt-5 flex items-center gap-5 rounded-[22px] bg-[#ff9f82] px-7 py-4 text-[#211734]">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#9fb7ff]">
-              <Lightbulb size={30} />
-            </span>
+            <h2 className="mt-8 text-3xl font-black">
+              REDMUEMMA es una plataforma para vender con propósito.
+            </h2>
 
-            <strong className="text-2xl">
-              Pasión y
-              <br />
-              creatividad
-            </strong>
-
-            <Sparkles className="ml-auto text-[#d66eff]" size={38} />
+            <p className="mt-4 text-sm leading-7 text-white/75">
+              El catálogo permite organizar productos, destacar perfiles de
+              emprendedoras y facilitar el contacto directo a través de
+              WhatsApp, redes sociales y datos públicos.
+            </p>
           </div>
         </div>
 
         <div>
-          <h2 className="text-4xl font-bold leading-tight md:text-5xl">
-            Cada compra es un acto de{" "}
-            <span className="text-[#ff9f82]">empoderamiento</span>
+          <span className="text-sm font-bold uppercase tracking-[0.25em] text-[#f6c6dc]">
+            Impacto
+          </span>
+
+          <h2 className="mt-3 text-3xl font-black md:text-4xl">
+            Una vitrina digital para fortalecer autonomía económica.
           </h2>
 
-          <p className="mt-7 text-lg leading-relaxed text-white/90">
-            Al apoyar estos emprendimientos, no solo adquieres productos únicos
-            y de calidad, sino que también contribuyes a la transformación de
-            vidas y comunidades enteras.
+          <p className="mt-5 text-base leading-8 text-white/75">
+            La nueva lógica de REDMUEMMA centraliza la comercialización bajo la
+            plataforma y conecta cada producto directamente con su emprendedora.
+            Así se simplifica la operación editorial, se mejora la experiencia
+            del comprador y se visibiliza mejor a cada mujer.
           </p>
 
-          <p className="mt-5 text-lg leading-relaxed text-white/90">
-            Cada artículo representa horas de dedicación, talento y la valentía
-            de mujeres que han decidido escribir un nuevo capítulo en sus
-            historias.
-          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5">
+              <Search className="h-6 w-6 text-[#f6c6dc]" />
+              <h3 className="mt-4 font-bold">Búsqueda simple</h3>
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                Productos y emprendedoras organizados por categoría.
+              </p>
+            </div>
 
-          <div className="mt-8">
-            <PillLink to={paths.public.about} light>
-              Conoce nuestra historia
-            </PillLink>
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5">
+              <ShieldCheck className="h-6 w-6 text-[#f6c6dc]" />
+              <h3 className="mt-4 font-bold">Control editorial</h3>
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                Admin y editor gestionan estados, imágenes y aprobaciones.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -486,36 +676,36 @@ function Story() {
 
 function CallToAction() {
   return (
-    <section className="bg-[linear-gradient(110deg,#ffe3e3,#fff,#f2e3ff)] px-5 py-20 md:py-24">
-      <div className="relative mx-auto grid max-w-[1224px] overflow-hidden rounded-[34px] bg-[#9fb7ff] shadow-[0_18px_40px_rgba(58,36,103,.16)] lg:grid-cols-[.9fr_1.1fr]">
-        <img
-          src="/home/cta.png"
-          alt="Red de mujeres emprendedoras"
-          className="h-full min-h-[330px] w-full object-cover"
-        />
+    <section className="mx-auto max-w-7xl px-5 py-16 md:px-8">
+      <div className="rounded-[2rem] bg-[#f8f3ff] p-8 text-center md:p-12">
+        <span className="text-sm font-bold uppercase tracking-[0.25em] text-[#7b3fe4]">
+          REDMUEMMA
+        </span>
 
-        <div className="relative flex flex-col justify-center p-8 text-white md:p-12">
-          <h2 className="text-3xl font-bold leading-tight md:text-[40px]">
-            Una red de mujeres que ya está transformando vidas
-          </h2>
+        <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-black text-[#211734] md:text-5xl">
+          Descubre productos con historia y compra directamente a sus creadoras.
+        </h2>
 
-          <p className="mt-5 text-lg leading-relaxed">
-            Estos emprendimientos no son sólo negocios, son evidencia de que el
-            talento y la determinación no tienen límites. Al apoyarlos, eres
-            parte de algo más grande.
-          </p>
+        <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#6d6383]">
+          Explora el catálogo público, encuentra productos por categoría y
+          contacta a las emprendedoras por WhatsApp.
+        </p>
 
-          <div className="mt-7">
-            <PillLink to={paths.public.catalog} light>
-              Ver catálogo
-            </PillLink>
-          </div>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            to={paths.public.catalog}
+            className="inline-flex items-center justify-center rounded-2xl bg-[#7b3fe4] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#7b3fe4]/20 transition hover:bg-[#6b31d2]"
+          >
+            Explorar catálogo
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
 
-          <div className="absolute bottom-0 right-0 flex items-end gap-2">
-            <span className="h-14 w-8 rounded-t-full bg-[#ff7da5]" />
-            <span className="h-14 w-16 bg-[#ff9f82]" />
-            <span className="h-14 w-16 bg-[#d66eff] [clip-path:polygon(0_0,100%_100%,0_100%)]" />
-          </div>
+          <Link
+            to={paths.public.entrepreneurs}
+            className="inline-flex items-center justify-center rounded-2xl border border-[#ded4ef] bg-white px-6 py-3 text-sm font-bold text-[#35264d] transition hover:border-[#c7b4e8]"
+          >
+            Ver emprendedoras
+          </Link>
         </div>
       </div>
     </section>
@@ -524,9 +714,11 @@ function CallToAction() {
 
 export function HomePage() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
-  const [businesses, setBusinesses] = useState<PublicBusiness[]>([]);
+  const [entrepreneurs, setEntrepreneurs] = useState<PublicBusiness[]>([]);
+
   const [productsTotal, setProductsTotal] = useState(0);
-  const [businessesTotal, setBusinessesTotal] = useState(0);
+  const [entrepreneursTotal, setEntrepreneursTotal] = useState(0);
+
   const [isLoading, setIsLoading] = useState(true);
   const [homeError, setHomeError] = useState<string | null>(null);
 
@@ -538,10 +730,10 @@ export function HomePage() {
         setIsLoading(true);
         setHomeError(null);
 
-        const [productsResponse, businessesResponse] = await Promise.all([
+        const [productsResult, entrepreneursResult] = await Promise.allSettled([
           publicProductService.getProducts({
             page: 1,
-            limit: 8,
+            limit: 12,
           }),
           publicBusinessService.getBusinesses({
             page: 1,
@@ -553,22 +745,30 @@ export function HomePage() {
           return;
         }
 
-        setProducts(productsResponse.products);
-        setBusinesses(businessesResponse.businesses);
-        setProductsTotal(productsResponse.pagination.total);
-        setBusinessesTotal(businessesResponse.pagination.total);
-      } catch {
-        if (!isMounted) {
-          return;
+        if (productsResult.status === "fulfilled") {
+          setProducts(productsResult.value.products);
+          setProductsTotal(productsResult.value.pagination.total);
+        } else {
+          setProducts([]);
+          setProductsTotal(0);
         }
 
-        setProducts([]);
-        setBusinesses([]);
-        setProductsTotal(0);
-        setBusinessesTotal(0);
-        setHomeError(
-          "No fue posible cargar la información pública desde el backend.",
-        );
+        if (entrepreneursResult.status === "fulfilled") {
+          setEntrepreneurs(entrepreneursResult.value.businesses);
+          setEntrepreneursTotal(entrepreneursResult.value.pagination.total);
+        } else {
+          setEntrepreneurs([]);
+          setEntrepreneursTotal(0);
+        }
+
+        if (
+          productsResult.status === "rejected" &&
+          entrepreneursResult.status === "rejected"
+        ) {
+          setHomeError(
+            "No fue posible cargar la información pública desde el backend.",
+          );
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -583,12 +783,27 @@ export function HomePage() {
     };
   }, []);
 
-  const homeCategories = useMemo(
-    () => buildHomeCategories(products),
-    [products],
-  );
-  const featuredProducts = products.slice(0, 4);
-  const citiesTotal = getUniqueCitiesCount(businesses);
+  const homeCategories = useMemo(() => {
+    return buildHomeCategories(products);
+  }, [products]);
+
+  const featuredProducts = useMemo(() => {
+    const featured = products.filter((product) => product.isFeatured);
+
+    return (featured.length > 0 ? featured : products).slice(0, 4);
+  }, [products]);
+
+  const featuredEntrepreneurs = useMemo(() => {
+    const featured = entrepreneurs.filter(
+      (entrepreneur) => entrepreneur.isFeatured,
+    );
+
+    return (featured.length > 0 ? featured : entrepreneurs).slice(0, 3);
+  }, [entrepreneurs]);
+
+  const citiesTotal = useMemo(() => {
+    return getUniqueCitiesCount(entrepreneurs);
+  }, [entrepreneurs]);
 
   return (
     <PublicLayout active="Inicio">
@@ -596,22 +811,31 @@ export function HomePage() {
         <Hero />
 
         {homeError ? (
-          <div className="bg-red-50 px-5 py-3 text-center text-sm font-medium text-red-700">
-            {homeError}
+          <div className="mx-auto mt-6 max-w-7xl px-5 md:px-8">
+            <div className="rounded-2xl bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800">
+              {homeError}
+            </div>
           </div>
         ) : null}
 
         <Impact
           productsTotal={productsTotal}
-          businessesTotal={businessesTotal}
+          entrepreneursTotal={entrepreneursTotal}
+          categoriesTotal={homeCategories.length}
           citiesTotal={citiesTotal}
         />
 
         <Categories categories={homeCategories} />
 
+        <Entrepreneurs
+          entrepreneurs={featuredEntrepreneurs}
+          isLoading={isLoading}
+        />
+
         <Products products={featuredProducts} isLoading={isLoading} />
 
         <Story />
+
         <CallToAction />
       </main>
     </PublicLayout>

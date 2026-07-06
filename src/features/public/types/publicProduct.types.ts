@@ -12,60 +12,96 @@ export interface PublicProductCategory {
   slug: string;
 }
 
-export interface PublicProductBusiness {
+export interface PublicProductEntrepreneur {
+  id: string;
+  userId?: string | null;
+  categoryId?: string | null;
+
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  slug?: string | null;
+
+  shortBio?: string | null;
+  bio?: string | null;
+  personalStory?: string | null;
+
+  photoUrl?: string | null;
+  profilePhotoUrl?: string | null;
+  bannerUrl?: string | null;
+
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
+  websiteUrl?: string | null;
+
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
+}
+
+/**
+ * Legacy temporal.
+ * Se mantiene solo para que archivos pendientes de refactor no rompan build.
+ */
+export interface PublicProductLegacyBusiness {
   id: string;
   name: string;
   slug: string;
-  description?: string | null;
-
-  // Campos nuevos del backend de emprendimientos
   contactWhatsapp?: string | null;
   contactPhone?: string | null;
   contactEmail?: string | null;
-  addressText?: string | null;
-
-  // Compatibilidad con respuestas públicas anteriores
   whatsapp?: string | null;
   phone?: string | null;
   email?: string | null;
-  address?: string | null;
-
-  instagramUrl?: string | null;
   facebookUrl?: string | null;
+  instagramUrl?: string | null;
   tiktokUrl?: string | null;
   websiteUrl?: string | null;
 }
 
-export interface PublicProductEntrepreneur {
-  id: string;
-  fullName: string;
-  bio?: string | null;
-  city?: string | null;
-  department?: string | null;
-  profilePhotoUrl?: string | null;
-}
-
 export interface PublicProduct {
   id: string;
-  businessId: string;
+  entrepreneurId: string;
   categoryId: string | null;
+
+  /**
+   * Legacy temporal.
+   */
+  businessId?: string | null;
+
   name: string;
   slug: string;
+
   shortDescription?: string | null;
   description?: string | null;
-  price?: string | null;
+
+  price?: string | number | null;
   hasPrice: boolean;
+
   managesStock: boolean;
   stock?: number | null;
+
   status: "published";
   isFeatured: boolean;
+
   publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 
   category?: PublicProductCategory | null;
-  business?: PublicProductBusiness | null;
   entrepreneur?: PublicProductEntrepreneur | null;
+
+  /**
+   * Legacy temporal.
+   */
+  business?: PublicProductLegacyBusiness | null;
+
   images: PublicProductImage[];
   mainImageUrl?: string | null;
 }
@@ -107,7 +143,6 @@ export interface GetPublicProductsParams {
   limit?: number;
   search?: string;
   categoryId?: string;
-  businessId?: string;
   entrepreneurId?: string;
   featured?: boolean;
 }

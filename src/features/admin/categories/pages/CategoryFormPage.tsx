@@ -155,7 +155,7 @@ export function CategoryFormPage() {
       <PageHeader
         eyebrow="Categorías"
         title={isEditMode ? "Editar categoría" : "Nueva categoría"}
-        description="Gestiona categorías para productos, emprendimientos o ambos."
+        description="Gestiona categorías para productos, emprendedoras o ambos."
         actions={
           <Button
             variant="secondary"
@@ -212,7 +212,7 @@ export function CategoryFormPage() {
                 {...register("type")}
               >
                 <option value="both">Ambos</option>
-                <option value="business">Emprendimiento</option>
+                <option value="entrepreneur">Emprendedora</option>
                 <option value="product">Producto</option>
               </select>
             </label>

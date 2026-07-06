@@ -1,4 +1,12 @@
-import { ArrowLeft, Check, ImageOff, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  ImageOff,
+  Images,
+  Pencil,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -9,11 +17,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { adminProductService } from "@/features/admin/products/api/adminProduct.service";
-import type { ProductSummary } from "@/features/products/types/product.types";
+import { PRODUCT_STATUS_OPTIONS } from "@/features/products/constants/productStatus.constants";
+import type {
+  ProductStatus,
+  ProductSummary,
+} from "@/features/products/types/product.types";
 import { paths } from "@/routes/paths";
 import { buildImageUrl } from "@/utils/image";
-import { PRODUCT_STATUS_OPTIONS } from "@/features/products/constants/productStatus.constants";
-import type { ProductStatus } from "@/features/products/types/product.types";
 
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
@@ -39,8 +49,14 @@ function getStatusVariant(status: string) {
   return "neutral";
 }
 
-function formatPrice(price?: number | null) {
-  if (price === null || price === undefined) {
+function formatPrice(price?: string | number | null) {
+  if (price === null || price === undefined || price === "") {
+    return "Precio no registrado";
+  }
+
+  const numericPrice = Number(price);
+
+  if (!Number.isFinite(numericPrice)) {
     return "Precio no registrado";
   }
 
@@ -48,7 +64,59 @@ function formatPrice(price?: number | null) {
     style: "currency",
     currency: "COP",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(numericPrice);
+}
+
+function getEditProductPath(id: string) {
+  return paths.admin.editProduct.replace(":id", id);
+}
+
+function getProductImagesPath(id: string) {
+  return paths.admin.productImages.replace(":id", id);
+}
+
+function getEntrepreneurName(product: ProductSummary) {
+  const entrepreneur = product.entrepreneur;
+
+  if (!entrepreneur) {
+    return "Sin emprendedora";
+  }
+
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName = entrepreneur.firstName?.trim() ?? "";
+  const lastName = entrepreneur.lastName?.trim() ?? "";
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEntrepreneurContact(product: ProductSummary) {
+  const entrepreneur = product.entrepreneur;
+
+  return {
+    email: entrepreneur?.email ?? null,
+    phone: entrepreneur?.phone ?? null,
+    whatsapp: entrepreneur?.whatsapp ?? null,
+    city: entrepreneur?.city ?? null,
+    department: entrepreneur?.department ?? null,
+    instagramUrl: entrepreneur?.instagramUrl ?? null,
+    facebookUrl: entrepreneur?.facebookUrl ?? null,
+    tiktokUrl: entrepreneur?.tiktokUrl ?? null,
+    websiteUrl: entrepreneur?.websiteUrl ?? null,
+  };
+}
+
+function getDisplayValue(value?: string | number | null) {
+  if (value === null || value === undefined || value === "") {
+    return "No registrado";
+  }
+
+  return String(value);
 }
 
 export function AdminProductDetailPage() {
@@ -158,6 +226,8 @@ export function AdminProductDetailPage() {
     );
   }
 
+  const contact = getEntrepreneurContact(product);
+
   return (
     <section>
       <PageHeader
@@ -174,6 +244,22 @@ export function AdminProductDetailPage() {
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => navigate(getEditProductPath(product.id))}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => navigate(getProductImagesPath(product.id))}
+            >
+              <Images className="mr-2 h-4 w-4" />
+              Imágenes
             </Button>
 
             <Button disabled={actionLoading} onClick={handleApprove}>
@@ -211,6 +297,24 @@ export function AdminProductDetailPage() {
           <dl className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                Emprendedora
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-ink-900">
+                {getEntrepreneurName(product)}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                Categoría
+              </dt>
+              <dd className="mt-1 text-sm text-ink-900">
+                {product.category?.name ?? "Sin categoría"}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
                 Precio
               </dt>
               <dd className="mt-1 text-sm font-semibold text-ink-900">
@@ -231,22 +335,33 @@ export function AdminProductDetailPage() {
 
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                Emprendimiento
+                Destacado
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {product.business?.name ?? "No registrado"}
+                {product.isFeatured ? "Sí" : "No"}
               </dd>
             </div>
 
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                Categoría
+                Publicación
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {product.category?.name ?? "Sin categoría"}
+                {product.publishedAt
+                  ? new Date(product.publishedAt).toLocaleString("es-CO")
+                  : "No publicado"}
               </dd>
             </div>
           </dl>
+
+          <div className="mt-6">
+            <h3 className="text-sm font-bold text-ink-900">
+              Descripción corta
+            </h3>
+            <p className="mt-2 text-sm leading-7 text-ink-500">
+              {product.shortDescription ?? "Sin descripción corta registrada."}
+            </p>
+          </div>
 
           <div className="mt-6">
             <h3 className="text-sm font-bold text-ink-900">Descripción</h3>
@@ -256,32 +371,144 @@ export function AdminProductDetailPage() {
           </div>
         </Card>
 
-        <Card>
-          <h2 className="text-lg font-bold text-ink-900">Imágenes</h2>
+        <div className="space-y-4">
+          <Card>
+            <h2 className="text-lg font-bold text-ink-900">
+              Contacto de emprendedora
+            </h2>
 
-          <div className="mt-5 grid gap-4">
-            {product.images?.length ? (
-              product.images.map((image) => (
-                <div
-                  key={image.id}
-                  className="overflow-hidden rounded-2xl border border-ink-100"
-                >
-                  <img
-                    src={buildImageUrl(image.imageUrl) ?? ""}
-                    alt={image.altText ?? product.name}
-                    className="h-48 w-full object-cover"
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-ink-100 bg-ink-50 text-ink-400">
-                <ImageOff className="h-8 w-8" />
-                <p className="mt-3 text-sm">Sin imágenes</p>
+            <dl className="mt-4 grid gap-4">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Correo
+                </dt>
+                <dd className="mt-1 text-sm text-ink-900">
+                  {getDisplayValue(contact.email)}
+                </dd>
               </div>
-            )}
-          </div>
-        </Card>
+
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Teléfono
+                </dt>
+                <dd className="mt-1 text-sm text-ink-900">
+                  {getDisplayValue(contact.phone)}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  WhatsApp
+                </dt>
+                <dd className="mt-1 text-sm text-ink-900">
+                  {getDisplayValue(contact.whatsapp)}
+                </dd>
+              </div>
+
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Ubicación
+                </dt>
+                <dd className="mt-1 text-sm text-ink-900">
+                  {[contact.city, contact.department]
+                    .filter(Boolean)
+                    .join(", ") || "No registrada"}
+                </dd>
+              </div>
+            </dl>
+          </Card>
+
+          <Card>
+            <h2 className="text-lg font-bold text-ink-900">Imágenes</h2>
+
+            <div className="mt-5 grid gap-4">
+              {product.images?.length ? (
+                product.images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="overflow-hidden rounded-2xl border border-ink-100"
+                  >
+                    <img
+                      src={buildImageUrl(image.imageUrl) ?? ""}
+                      alt={image.altText ?? product.name}
+                      className="h-48 w-full object-cover"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-ink-100 bg-ink-50 text-ink-400">
+                  <ImageOff className="h-8 w-8" />
+                  <p className="mt-3 text-sm">Sin imágenes</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <h2 className="text-lg font-bold text-ink-900">Redes</h2>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {contact.instagramUrl ? (
+                <a
+                  href={contact.instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Instagram
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {contact.facebookUrl ? (
+                <a
+                  href={contact.facebookUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Facebook
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {contact.tiktokUrl ? (
+                <a
+                  href={contact.tiktokUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  TikTok
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {contact.websiteUrl ? (
+                <a
+                  href={contact.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Sitio web
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {!contact.instagramUrl &&
+              !contact.facebookUrl &&
+              !contact.tiktokUrl &&
+              !contact.websiteUrl ? (
+                <p className="text-sm text-ink-500">
+                  No hay redes registradas.
+                </p>
+              ) : null}
+            </div>
+          </Card>
+        </div>
       </div>
+
       <Card className="mt-4">
         <h2 className="text-lg font-bold text-ink-900">
           Control manual de estado
@@ -315,6 +542,7 @@ export function AdminProductDetailPage() {
           </Button>
         </div>
       </Card>
+
       {product.rejectionReason ? (
         <Card className="mt-4 border-red-100 bg-red-50">
           <h2 className="text-lg font-bold text-red-800">Motivo de rechazo</h2>

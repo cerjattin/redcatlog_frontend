@@ -15,7 +15,7 @@ export const categorySchema = z.object({
 
   iconUrl: z.string().optional(),
 
-  type: z.enum(["business", "product", "both"]),
+  type: z.enum(["entrepreneur", "product", "both"]),
 
   sortOrder: z.number().optional(),
 

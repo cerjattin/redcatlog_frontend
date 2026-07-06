@@ -51,7 +51,7 @@ function getDataFromPayload(payload: unknown) {
   return payload;
 }
 
-function getBusinessesFromData(data: unknown): PublicBusiness[] {
+function getEntrepreneursFromData(data: unknown): PublicBusiness[] {
   if (Array.isArray(data)) {
     return data as PublicBusiness[];
   }
@@ -60,12 +60,15 @@ function getBusinessesFromData(data: unknown): PublicBusiness[] {
     return data.items as PublicBusiness[];
   }
 
-  if (isRecord(data) && Array.isArray(data.businesses)) {
-    return data.businesses as PublicBusiness[];
-  }
-
   if (isRecord(data) && Array.isArray(data.entrepreneurs)) {
     return data.entrepreneurs as PublicBusiness[];
+  }
+
+  /**
+   * Legacy temporal.
+   */
+  if (isRecord(data) && Array.isArray(data.businesses)) {
+    return data.businesses as PublicBusiness[];
   }
 
   return [];
@@ -73,12 +76,12 @@ function getBusinessesFromData(data: unknown): PublicBusiness[] {
 
 function getPaginationFromData(
   data: unknown,
-  businesses: PublicBusiness[],
+  entrepreneurs: PublicBusiness[],
 ): PublicBusinessesPagination {
   if (isRecord(data) && isRecord(data.pagination)) {
     const page = Number(data.pagination.page ?? 1);
     const limit = Number(data.pagination.limit ?? 12);
-    const total = Number(data.pagination.total ?? businesses.length);
+    const total = Number(data.pagination.total ?? entrepreneurs.length);
     const totalPages = Math.max(Number(data.pagination.totalPages ?? 1), 1);
 
     return {
@@ -88,25 +91,27 @@ function getPaginationFromData(
       totalPages,
       hasNextPage:
         Boolean(data.pagination.hasNextPage) ||
+        Boolean(data.pagination.hasNext) ||
         (totalPages > 0 ? page < totalPages : false),
       hasPreviousPage:
         Boolean(data.pagination.hasPreviousPage) ||
+        Boolean(data.pagination.hasPrevPage) ||
         (totalPages > 0 ? page > 1 : false),
     };
   }
 
-  return buildDefaultPagination(businesses.length);
+  return buildDefaultPagination(entrepreneurs.length);
 }
 
-function normalizePublicBusinessesResponse(
+function normalizePublicEntrepreneursResponse(
   payload: unknown,
 ): PublicBusinessesData {
   const data = getDataFromPayload(payload);
-  const businesses = getBusinessesFromData(data);
-  const pagination = getPaginationFromData(data, businesses);
+  const entrepreneurs = getEntrepreneursFromData(data);
+  const pagination = getPaginationFromData(data, entrepreneurs);
 
   return {
-    businesses,
+    businesses: entrepreneurs,
     pagination,
   };
 }
@@ -115,10 +120,10 @@ export const publicBusinessService = {
   async getBusinesses(
     params?: GetPublicBusinessesParams,
   ): Promise<PublicBusinessesData> {
-    const response = await api.get<unknown>("/public/businesses", {
+    const response = await api.get<unknown>("/public/entrepreneurs", {
       params: cleanParams(params),
     });
 
-    return normalizePublicBusinessesResponse(response.data);
+    return normalizePublicEntrepreneursResponse(response.data);
   },
 };

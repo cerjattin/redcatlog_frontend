@@ -22,6 +22,7 @@ function getStatusLabel(status: string) {
     draft: "Borrador",
     pending_review: "Pendiente",
     approved: "Aprobada",
+    active: "Activa",
     rejected: "Rechazada",
     inactive: "Inactiva",
   };
@@ -30,7 +31,7 @@ function getStatusLabel(status: string) {
 }
 
 function getStatusVariant(status: string) {
-  if (status === "approved") {
+  if (status === "approved" || status === "active") {
     return "success";
   }
 
@@ -47,6 +48,52 @@ function getStatusVariant(status: string) {
 
 function getAdminEntrepreneurDetailPath(id: string) {
   return paths.admin.entrepreneurDetail.replace(":id", id);
+}
+
+function getEntrepreneurName(entrepreneur: AdminEntrepreneur) {
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName =
+    entrepreneur.firstName?.trim() ??
+    entrepreneur.user?.firstName?.trim() ??
+    "";
+
+  const lastName =
+    entrepreneur.lastName?.trim() ?? entrepreneur.user?.lastName?.trim() ?? "";
+
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEntrepreneurEmail(entrepreneur: AdminEntrepreneur) {
+  return (
+    entrepreneur.email ?? entrepreneur.user?.email ?? "Correo no registrado"
+  );
+}
+
+function getEntrepreneurPhone(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.phone ?? entrepreneur.user?.phone ?? null;
+}
+
+function getEntrepreneurWhatsapp(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.whatsapp ?? entrepreneur.user?.whatsapp ?? null;
+}
+
+function getEntrepreneurLocation(entrepreneur: AdminEntrepreneur) {
+  const city = entrepreneur.city ?? entrepreneur.user?.city ?? null;
+  const department =
+    entrepreneur.department ?? entrepreneur.user?.department ?? null;
+
+  if (city && department) {
+    return `${city}, ${department}`;
+  }
+
+  return city || department || entrepreneur.country || "No registrada";
 }
 
 export function AdminEntrepreneursPage() {
@@ -90,7 +137,7 @@ export function AdminEntrepreneursPage() {
     void loadEntrepreneurs();
   }, [loadEntrepreneurs]);
 
-  async function handleSearch() {
+  function handleSearch() {
     setAppliedSearch(search);
     setPage(1);
   }
@@ -98,9 +145,7 @@ export function AdminEntrepreneursPage() {
   async function handleApprove(entrepreneurId: string) {
     try {
       setActionLoadingId(entrepreneurId);
-
       await adminEntrepreneurService.approveEntrepreneur(entrepreneurId);
-
       await loadEntrepreneurs();
     } finally {
       setActionLoadingId(null);
@@ -162,13 +207,13 @@ export function AdminEntrepreneursPage() {
       <PageHeader
         eyebrow="Administración"
         title="Gestión de emprendedoras"
-        description="Revisa perfiles, aprueba, rechaza y controla el estado de las emprendedoras registradas."
+        description="Revisa perfiles, datos de contacto, categoría, redes sociales y estado de aprobación."
       />
 
       <Card className="mb-5">
         <div className="grid gap-4 md:grid-cols-[1fr_220px_auto]">
           <Input
-            placeholder="Buscar por nombre, correo, ciudad o documento..."
+            placeholder="Buscar por nombre, correo, ciudad, categoría o documento..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -185,6 +230,7 @@ export function AdminEntrepreneursPage() {
             <option value="draft">Borrador</option>
             <option value="pending_review">Pendiente</option>
             <option value="approved">Aprobada</option>
+            <option value="active">Activa</option>
             <option value="rejected">Rechazada</option>
             <option value="inactive">Inactiva</option>
           </select>
@@ -211,16 +257,16 @@ export function AdminEntrepreneursPage() {
                     Emprendedora
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
+                    Categoría
+                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
                     Ubicación
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
                     Contacto
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
-                    Estado perfil
-                  </th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
-                    Emprendimientos
+                    Estado
                   </th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-ink-500">
                     Acciones
@@ -229,136 +275,109 @@ export function AdminEntrepreneursPage() {
               </thead>
 
               <tbody className="divide-y divide-ink-100 bg-white">
-                {entrepreneurs.map((entrepreneur) => {
-                  const user = entrepreneur.user;
+                {entrepreneurs.map((entrepreneur) => (
+                  <tr key={entrepreneur.id}>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-ink-900">
+                        {getEntrepreneurName(entrepreneur)}
+                      </p>
 
-                  return (
-                    <tr key={entrepreneur.id}>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-ink-900">
-                          {user
-                            ? `${user.firstName} ${user.lastName}`
-                            : "Usuario no registrado"}
+                      <p className="mt-1 text-xs text-ink-500">
+                        {getEntrepreneurEmail(entrepreneur)}
+                      </p>
+
+                      {entrepreneur.documentNumber ? (
+                        <p className="mt-1 text-xs text-ink-400">
+                          {entrepreneur.documentType ?? "Doc"}:{" "}
+                          {entrepreneur.documentNumber}
                         </p>
+                      ) : null}
+                    </td>
 
-                        <p className="mt-1 text-xs text-ink-500">
-                          {user?.email ?? "Correo no registrado"}
-                        </p>
+                    <td className="px-5 py-4 text-sm text-ink-600">
+                      {entrepreneur.category?.name ?? "Sin categoría"}
+                    </td>
 
-                        {entrepreneur.documentNumber ? (
-                          <p className="mt-1 text-xs text-ink-400">
-                            {entrepreneur.documentType ?? "Doc"}:{" "}
-                            {entrepreneur.documentNumber}
-                          </p>
+                    <td className="px-5 py-4 text-sm text-ink-600">
+                      {getEntrepreneurLocation(entrepreneur)}
+                    </td>
+
+                    <td className="px-5 py-4 text-sm text-ink-600">
+                      <p>
+                        Tel:{" "}
+                        {getEntrepreneurPhone(entrepreneur) ?? "No registrado"}
+                      </p>
+                      <p className="mt-1">
+                        WhatsApp:{" "}
+                        {getEntrepreneurWhatsapp(entrepreneur) ??
+                          "No registrado"}
+                      </p>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <Badge variant={getStatusVariant(entrepreneur.status)}>
+                        {getStatusLabel(entrepreneur.status)}
+                      </Badge>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() =>
+                            navigate(
+                              getAdminEntrepreneurDetailPath(entrepreneur.id),
+                            )
+                          }
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver
+                        </Button>
+
+                        {entrepreneur.status !== "approved" ? (
+                          <Button
+                            size="sm"
+                            disabled={actionLoadingId === entrepreneur.id}
+                            onClick={() => handleApprove(entrepreneur.id)}
+                          >
+                            <Check className="mr-2 h-4 w-4" />
+                            Aprobar
+                          </Button>
                         ) : null}
-                      </td>
 
-                      <td className="px-5 py-4 text-sm text-ink-600">
-                        {entrepreneur.city ??
-                          user?.city ??
-                          "Ciudad no registrada"}
-                        {(entrepreneur.department ?? user?.department)
-                          ? `, ${entrepreneur.department ?? user?.department}`
-                          : ""}
-                      </td>
+                        {entrepreneur.status !== "rejected" ? (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            disabled={actionLoadingId === entrepreneur.id}
+                            onClick={() => handleReject(entrepreneur.id)}
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Rechazar
+                          </Button>
+                        ) : null}
 
-                      <td className="px-5 py-4 text-sm text-ink-600">
-                        <p>Tel: {user?.phone ?? "No registrado"}</p>
-                        <p className="mt-1">
-                          WhatsApp: {user?.whatsapp ?? "No registrado"}
-                        </p>
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <Badge variant={getStatusVariant(entrepreneur.status)}>
-                          {getStatusLabel(entrepreneur.status)}
-                        </Badge>
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-ink-600">
-                        {entrepreneur.businesses.length > 0 ? (
-                          <div className="space-y-1">
-                            {entrepreneur.businesses
-                              .slice(0, 2)
-                              .map((business) => (
-                                <p key={business.id}>
-                                  {business.name}{" "}
-                                  <span className="text-xs text-ink-400">
-                                    ({business.status})
-                                  </span>
-                                </p>
-                              ))}
-
-                            {entrepreneur.businesses.length > 2 ? (
-                              <p className="text-xs text-ink-400">
-                                +{entrepreneur.businesses.length - 2} más
-                              </p>
-                            ) : null}
-                          </div>
-                        ) : (
-                          "Sin emprendimientos"
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
+                        {entrepreneur.status !== "inactive" ? (
                           <Button
                             variant="secondary"
                             size="sm"
+                            disabled={actionLoadingId === entrepreneur.id}
                             onClick={() =>
-                              navigate(
-                                getAdminEntrepreneurDetailPath(entrepreneur.id),
+                              handleQuickStatusChange(
+                                entrepreneur.id,
+                                "inactive",
                               )
                             }
                           >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver
+                            <UserX className="mr-2 h-4 w-4" />
+                            Inactivar
                           </Button>
-
-                          {entrepreneur.status !== "approved" ? (
-                            <Button
-                              size="sm"
-                              disabled={actionLoadingId === entrepreneur.id}
-                              onClick={() => handleApprove(entrepreneur.id)}
-                            >
-                              <Check className="mr-2 h-4 w-4" />
-                              Aprobar
-                            </Button>
-                          ) : null}
-
-                          {entrepreneur.status !== "rejected" ? (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              disabled={actionLoadingId === entrepreneur.id}
-                              onClick={() => handleReject(entrepreneur.id)}
-                            >
-                              <X className="mr-2 h-4 w-4" />
-                              Rechazar
-                            </Button>
-                          ) : null}
-
-                          {entrepreneur.status !== "inactive" ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              disabled={actionLoadingId === entrepreneur.id}
-                              onClick={() =>
-                                handleQuickStatusChange(
-                                  entrepreneur.id,
-                                  "inactive",
-                                )
-                              }
-                            >
-                              <UserX className="mr-2 h-4 w-4" />
-                              Inactivar
-                            </Button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

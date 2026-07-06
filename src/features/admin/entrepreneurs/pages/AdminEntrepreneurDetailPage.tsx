@@ -1,4 +1,11 @@
-import { ArrowLeft, Check, Store, UserX, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  ImageOff,
+  UserX,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -15,12 +22,14 @@ import type {
   EntrepreneurStatus,
 } from "@/features/admin/entrepreneurs/types/adminEntrepreneur.types";
 import { paths } from "@/routes/paths";
+import { buildImageUrl } from "@/utils/image";
 
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
     draft: "Borrador",
     pending_review: "Pendiente",
     approved: "Aprobada",
+    active: "Activa",
     rejected: "Rechazada",
     inactive: "Inactiva",
   };
@@ -29,7 +38,7 @@ function getStatusLabel(status: string) {
 }
 
 function getStatusVariant(status: string) {
-  if (status === "approved") {
+  if (status === "approved" || status === "active") {
     return "success";
   }
 
@@ -44,8 +53,60 @@ function getStatusVariant(status: string) {
   return "neutral";
 }
 
-function getAdminBusinessDetailPath(id: string) {
-  return paths.admin.businessDetail.replace(":id", id);
+function getEntrepreneurName(entrepreneur: AdminEntrepreneur) {
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName =
+    entrepreneur.firstName?.trim() ??
+    entrepreneur.user?.firstName?.trim() ??
+    "";
+
+  const lastName =
+    entrepreneur.lastName?.trim() ?? entrepreneur.user?.lastName?.trim() ?? "";
+
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEmail(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.email ?? entrepreneur.user?.email ?? null;
+}
+
+function getPhone(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.phone ?? entrepreneur.user?.phone ?? null;
+}
+
+function getWhatsapp(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.whatsapp ?? entrepreneur.user?.whatsapp ?? null;
+}
+
+function getCity(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.city ?? entrepreneur.user?.city ?? null;
+}
+
+function getDepartment(entrepreneur: AdminEntrepreneur) {
+  return entrepreneur.department ?? entrepreneur.user?.department ?? null;
+}
+
+function getDisplayValue(value?: string | number | null) {
+  if (value === null || value === undefined || value === "") {
+    return "No registrado";
+  }
+
+  return String(value);
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "No registrado";
+  }
+
+  return new Date(value).toLocaleString("es-CO");
 }
 
 export function AdminEntrepreneurDetailPage() {
@@ -97,9 +158,7 @@ export function AdminEntrepreneurDetailPage() {
 
     try {
       setActionLoading(true);
-
       await adminEntrepreneurService.approveEntrepreneur(entrepreneur.id);
-
       await loadEntrepreneur();
     } finally {
       setActionLoading(false);
@@ -188,17 +247,20 @@ export function AdminEntrepreneurDetailPage() {
     );
   }
 
-  const user = entrepreneur.user;
+  const photoUrl = buildImageUrl(
+    entrepreneur.photoUrl ?? entrepreneur.profilePhotoUrl,
+  );
+  const bannerUrl = buildImageUrl(entrepreneur.bannerUrl);
+  const name = getEntrepreneurName(entrepreneur);
 
   return (
     <section>
       <PageHeader
         eyebrow="Administración"
-        title={
-          user ? `${user.firstName} ${user.lastName}` : "Perfil de emprendedora"
-        }
+        title={name}
         description={
           entrepreneur.shortBio ??
+          entrepreneur.bio ??
           "Detalle administrativo del perfil de emprendedora."
         }
         actions={
@@ -237,7 +299,51 @@ export function AdminEntrepreneurDetailPage() {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_0.75fr]">
+      <div className="overflow-hidden rounded-3xl border border-ink-100 bg-white shadow-sm">
+        {bannerUrl ? (
+          <img
+            src={bannerUrl}
+            alt={`Banner de ${name}`}
+            className="h-52 w-full object-cover md:h-72"
+          />
+        ) : (
+          <div className="flex h-52 w-full items-center justify-center bg-ink-50 text-ink-400 md:h-72">
+            <ImageOff className="h-9 w-9" />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-5 px-6 pb-6 pt-5 md:flex-row md:items-end md:justify-between">
+          <div className="flex items-center gap-4">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={name}
+                className="h-24 w-24 rounded-2xl border border-ink-100 bg-white object-cover shadow-sm"
+              />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-ink-100 bg-ink-50 text-xs text-ink-400">
+                Sin foto
+              </div>
+            )}
+
+            <div>
+              <div className="mb-2">
+                <Badge variant={getStatusVariant(entrepreneur.status)}>
+                  {getStatusLabel(entrepreneur.status)}
+                </Badge>
+              </div>
+
+              <h2 className="text-2xl font-bold text-ink-900">{name}</h2>
+
+              <p className="mt-1 text-sm text-ink-500">
+                {entrepreneur.category?.name ?? "Sin categoría principal"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.75fr]">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -246,7 +352,10 @@ export function AdminEntrepreneurDetailPage() {
               </h2>
 
               <p className="mt-1 text-xs text-ink-500">
-                ID perfil: {entrepreneur.id} · Usuario: {entrepreneur.userId}
+                ID perfil: {entrepreneur.id}
+                {entrepreneur.userId
+                  ? ` · Usuario: ${entrepreneur.userId}`
+                  : ""}
               </p>
             </div>
 
@@ -258,19 +367,37 @@ export function AdminEntrepreneurDetailPage() {
           <dl className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                Tipo de documento
+                Nombre
+              </dt>
+              <dd className="mt-1 text-sm text-ink-900">{name}</dd>
+            </div>
+
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                Slug
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {entrepreneur.documentType ?? "No registrado"}
+                {getDisplayValue(entrepreneur.slug)}
               </dd>
             </div>
 
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                Número de documento
+                Categoría
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {entrepreneur.documentNumber ?? "No registrado"}
+                {entrepreneur.category?.name ?? "Sin categoría"}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                Documento
+              </dt>
+              <dd className="mt-1 text-sm text-ink-900">
+                {entrepreneur.documentNumber
+                  ? `${entrepreneur.documentType ?? "Doc"} ${entrepreneur.documentNumber}`
+                  : "No registrado"}
               </dd>
             </div>
 
@@ -279,7 +406,7 @@ export function AdminEntrepreneurDetailPage() {
                 Ciudad
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {entrepreneur.city ?? user?.city ?? "No registrada"}
+                {getDisplayValue(getCity(entrepreneur))}
               </dd>
             </div>
 
@@ -288,7 +415,7 @@ export function AdminEntrepreneurDetailPage() {
                 Departamento
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {entrepreneur.department ?? user?.department ?? "No registrado"}
+                {getDisplayValue(getDepartment(entrepreneur))}
               </dd>
             </div>
 
@@ -306,7 +433,7 @@ export function AdminEntrepreneurDetailPage() {
                 Ubicación textual
               </dt>
               <dd className="mt-1 text-sm text-ink-900">
-                {entrepreneur.locationText ?? "No registrada"}
+                {getDisplayValue(entrepreneur.locationText)}
               </dd>
             </div>
           </dl>
@@ -315,7 +442,9 @@ export function AdminEntrepreneurDetailPage() {
             <h3 className="text-sm font-bold text-ink-900">Biografía corta</h3>
 
             <p className="mt-2 text-sm leading-7 text-ink-500">
-              {entrepreneur.shortBio ?? "Sin biografía registrada."}
+              {entrepreneur.shortBio ??
+                entrepreneur.bio ??
+                "Sin biografía registrada."}
             </p>
           </div>
 
@@ -332,26 +461,15 @@ export function AdminEntrepreneurDetailPage() {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-lg font-bold text-ink-900">Datos de usuario</h2>
+            <h2 className="text-lg font-bold text-ink-900">Contacto</h2>
 
             <dl className="mt-4 grid gap-4">
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                  Nombre
-                </dt>
-                <dd className="mt-1 text-sm text-ink-900">
-                  {user
-                    ? `${user.firstName} ${user.lastName}`
-                    : "No registrado"}
-                </dd>
-              </div>
-
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
                   Correo
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {user?.email ?? "No registrado"}
+                  {getDisplayValue(getEmail(entrepreneur))}
                 </dd>
               </div>
 
@@ -360,7 +478,7 @@ export function AdminEntrepreneurDetailPage() {
                   Teléfono
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {user?.phone ?? "No registrado"}
+                  {getDisplayValue(getPhone(entrepreneur))}
                 </dd>
               </div>
 
@@ -369,28 +487,86 @@ export function AdminEntrepreneurDetailPage() {
                   WhatsApp
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {user?.whatsapp ?? "No registrado"}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                  Estado usuario
-                </dt>
-                <dd className="mt-1 text-sm text-ink-900">
-                  {user?.status ?? "No registrado"}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-                  Rol
-                </dt>
-                <dd className="mt-1 text-sm text-ink-900">
-                  {user?.role?.name ?? "No registrado"}
+                  {getDisplayValue(getWhatsapp(entrepreneur))}
                 </dd>
               </div>
             </dl>
+          </Card>
+
+          <Card>
+            <h2 className="text-lg font-bold text-ink-900">Redes sociales</h2>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {entrepreneur.instagramUrl ? (
+                <a
+                  href={entrepreneur.instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Instagram
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {entrepreneur.facebookUrl ? (
+                <a
+                  href={entrepreneur.facebookUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Facebook
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {entrepreneur.tiktokUrl ? (
+                <a
+                  href={entrepreneur.tiktokUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  TikTok
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {entrepreneur.youtubeUrl ? (
+                <a
+                  href={entrepreneur.youtubeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  YouTube
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {entrepreneur.websiteUrl ? (
+                <a
+                  href={entrepreneur.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-xl border border-ink-100 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-50"
+                >
+                  Sitio web
+                  <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              {!entrepreneur.instagramUrl &&
+              !entrepreneur.facebookUrl &&
+              !entrepreneur.tiktokUrl &&
+              !entrepreneur.youtubeUrl &&
+              !entrepreneur.websiteUrl ? (
+                <p className="text-sm text-ink-500">
+                  No hay redes sociales registradas.
+                </p>
+              ) : null}
+            </div>
           </Card>
 
           <Card>
@@ -402,7 +578,7 @@ export function AdminEntrepreneurDetailPage() {
                   Creación
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {new Date(entrepreneur.createdAt).toLocaleString("es-CO")}
+                  {formatDate(entrepreneur.createdAt)}
                 </dd>
               </div>
 
@@ -411,7 +587,7 @@ export function AdminEntrepreneurDetailPage() {
                   Actualización
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {new Date(entrepreneur.updatedAt).toLocaleString("es-CO")}
+                  {formatDate(entrepreneur.updatedAt)}
                 </dd>
               </div>
 
@@ -420,9 +596,7 @@ export function AdminEntrepreneurDetailPage() {
                   Aprobación
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {entrepreneur.approvedAt
-                    ? new Date(entrepreneur.approvedAt).toLocaleString("es-CO")
-                    : "No aprobada"}
+                  {formatDate(entrepreneur.approvedAt)}
                 </dd>
               </div>
 
@@ -431,59 +605,13 @@ export function AdminEntrepreneurDetailPage() {
                   Rechazo
                 </dt>
                 <dd className="mt-1 text-sm text-ink-900">
-                  {entrepreneur.rejectedAt
-                    ? new Date(entrepreneur.rejectedAt).toLocaleString("es-CO")
-                    : "Sin rechazo"}
+                  {formatDate(entrepreneur.rejectedAt)}
                 </dd>
               </div>
             </dl>
           </Card>
         </div>
       </div>
-
-      <Card className="mt-4">
-        <h2 className="text-lg font-bold text-ink-900">
-          Emprendimientos asociados
-        </h2>
-
-        {entrepreneur.businesses.length > 0 ? (
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {entrepreneur.businesses.map((business) => (
-              <button
-                key={business.id}
-                type="button"
-                className="rounded-2xl border border-ink-100 bg-ink-50 p-4 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm"
-                onClick={() =>
-                  navigate(getAdminBusinessDetailPath(business.id))
-                }
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-ink-900">
-                      {business.name}
-                    </p>
-
-                    <p className="mt-1 text-xs text-ink-500">
-                      /{business.slug}
-                    </p>
-                  </div>
-
-                  <Badge variant={getStatusVariant(business.status)}>
-                    {getStatusLabel(business.status)}
-                  </Badge>
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-4 flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-ink-100 bg-ink-50 text-ink-400">
-            <Store className="h-7 w-7" />
-            <p className="mt-3 text-sm">
-              Esta emprendedora aún no tiene emprendimientos asociados.
-            </p>
-          </div>
-        )}
-      </Card>
 
       <Card className="mt-4">
         <h2 className="text-lg font-bold text-ink-900">

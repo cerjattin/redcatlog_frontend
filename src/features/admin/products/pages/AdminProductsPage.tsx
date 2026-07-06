@@ -1,5 +1,6 @@
-import { Archive, Check, Eye, Search, X } from "lucide-react";
+import { Archive, Check, Eye, Plus, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Loader } from "@/components/feedback/Loader";
@@ -11,8 +12,6 @@ import { Input } from "@/components/ui/Input";
 import { adminProductService } from "@/features/admin/products/api/adminProduct.service";
 import type { AdminProductPagination } from "@/features/admin/products/types/adminProduct.types";
 import type { ProductSummary } from "@/features/products/types/product.types";
-
-import { useNavigate } from "react-router-dom";
 import { paths } from "@/routes/paths";
 
 function getStatusLabel(status: string) {
@@ -43,19 +42,60 @@ function getAdminProductDetailPath(id: string) {
   return paths.admin.productDetail.replace(":id", id);
 }
 
+function getEntrepreneurName(product: ProductSummary) {
+  const entrepreneur = product.entrepreneur;
+
+  if (!entrepreneur) {
+    return "Sin emprendedora";
+  }
+
+  const fullName = entrepreneur.fullName?.trim();
+
+  if (fullName) {
+    return fullName;
+  }
+
+  const firstName = entrepreneur.firstName?.trim() ?? "";
+  const lastName = entrepreneur.lastName?.trim() ?? "";
+  const name = `${firstName} ${lastName}`.trim();
+
+  return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function formatPrice(price?: string | number | null) {
+  if (price === null || price === undefined || price === "") {
+    return "No registrado";
+  }
+
+  const numericPrice = Number(price);
+
+  if (!Number.isFinite(numericPrice)) {
+    return "No registrado";
+  }
+
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(numericPrice);
+}
+
 export function AdminProductsPage() {
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [pagination, setPagination] = useState<AdminProductPagination | null>(
     null,
   );
+
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
+
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const loadProducts = useCallback(async () => {
     try {
@@ -82,7 +122,7 @@ export function AdminProductsPage() {
     void loadProducts();
   }, [loadProducts]);
 
-  async function handleSearch() {
+  function handleSearch() {
     setAppliedSearch(search);
     setPage(1);
   }
@@ -90,9 +130,7 @@ export function AdminProductsPage() {
   async function handleApprove(productId: string) {
     try {
       setActionLoadingId(productId);
-
       await adminProductService.approveProduct(productId);
-
       await loadProducts();
     } finally {
       setActionLoadingId(null);
@@ -110,7 +148,7 @@ export function AdminProductsPage() {
       setActionLoadingId(productId);
 
       await adminProductService.rejectProduct(productId, {
-        rejectionReason: reason,
+        rejectionReason: reason.trim(),
       });
 
       await loadProducts();
@@ -121,13 +159,13 @@ export function AdminProductsPage() {
 
   async function handleQuickStatusChange(
     productId: string,
-    status: ProductSummary["status"],
+    nextStatus: ProductSummary["status"],
   ) {
     try {
       setActionLoadingId(productId);
 
       await adminProductService.updateProductStatus(productId, {
-        status,
+        status: nextStatus,
       });
 
       await loadProducts();
@@ -154,13 +192,19 @@ export function AdminProductsPage() {
       <PageHeader
         eyebrow="Administración"
         title="Gestión de productos"
-        description="Revisa, aprueba, rechaza y controla el estado de los productos publicados por las emprendedoras."
+        description="Crea, revisa, aprueba, rechaza y controla el estado de los productos de REDMUEMMA."
+        actions={
+          <Button onClick={() => navigate(paths.admin.newProduct)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo producto
+          </Button>
+        }
       />
 
       <Card className="mb-5">
         <div className="grid gap-4 md:grid-cols-[1fr_220px_auto]">
           <Input
-            placeholder="Buscar por nombre, slug o descripción..."
+            placeholder="Buscar por nombre, slug, descripción o emprendedora..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -205,7 +249,10 @@ export function AdminProductsPage() {
                     Producto
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
-                    Emprendimiento
+                    Emprendedora
+                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
+                    Categoría
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-ink-500">
                     Estado
@@ -232,7 +279,11 @@ export function AdminProductsPage() {
                     </td>
 
                     <td className="px-5 py-4 text-sm text-ink-600">
-                      {product.business?.name ?? "No registrado"}
+                      {getEntrepreneurName(product)}
+                    </td>
+
+                    <td className="px-5 py-4 text-sm text-ink-600">
+                      {product.category?.name ?? "Sin categoría"}
                     </td>
 
                     <td className="px-5 py-4">
@@ -244,11 +295,7 @@ export function AdminProductsPage() {
                     <td className="px-5 py-4 text-sm font-medium text-ink-700">
                       {product.hasPrice === false
                         ? "Consultar"
-                        : (product.price?.toLocaleString("es-CO", {
-                            style: "currency",
-                            currency: "COP",
-                            maximumFractionDigits: 0,
-                          }) ?? "No registrado")}
+                        : formatPrice(product.price)}
                     </td>
 
                     <td className="px-5 py-4">
@@ -286,6 +333,7 @@ export function AdminProductsPage() {
                             Rechazar
                           </Button>
                         ) : null}
+
                         <Button
                           variant="secondary"
                           size="sm"

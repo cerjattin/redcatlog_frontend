@@ -7,6 +7,7 @@ export const ENTREPRENEUR_STATUS_OPTIONS: Array<{
   { value: "draft", label: "Borrador" },
   { value: "pending_review", label: "Pendiente de revisión" },
   { value: "approved", label: "Aprobada" },
+  { value: "active", label: "Activa" },
   { value: "rejected", label: "Rechazada" },
   { value: "inactive", label: "Inactiva" },
 ];
@@ -15,6 +16,7 @@ export const ENTREPRENEUR_STATUS_LABELS: Record<EntrepreneurStatus, string> = {
   draft: "Borrador",
   pending_review: "Pendiente de revisión",
   approved: "Aprobada",
+  active: "Activa",
   rejected: "Rechazada",
   inactive: "Inactiva",
 };

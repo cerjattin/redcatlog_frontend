@@ -73,12 +73,12 @@ function EntrepreneursHero() {
 
         <div className="min-w-0 max-w-full">
           <h1 className="max-w-full break-words text-[38px] font-bold leading-tight text-[#211734] sm:text-5xl md:text-[56px]">
-            Emprendimientos de la Red
+            Emprendedoras de la Red
           </h1>
 
           <p className="mt-3 max-w-2xl text-lg text-[#6d6383] md:text-2xl">
-            Conoce marcas creadas por mujeres emprendedoras y apoya sus
-            productos, historias y procesos.
+            Conoce las historias, productos y datos de contacto de las
+            emprendedoras que forman parte de nuestra red.
           </p>
         </div>
       </div>
@@ -111,7 +111,7 @@ function EntrepreneursControls({
           <input
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Buscar emprendimientos, ciudades o categorías..."
+            placeholder="Buscar emprendedoras, ciudades o categorías..."
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8e80aa]"
           />
         </label>
@@ -161,7 +161,11 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
         {bannerUrl ? (
           <img
             src={bannerUrl}
-            alt={`Banner de ${business.name}`}
+            alt={`Banner de ${
+              business.fullName ||
+              `${business.firstName ?? ""} ${business.lastName ?? ""}`.trim() ||
+              "emprendedora"
+            }`}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -180,7 +184,11 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
           {logoUrl ? (
             <img
               src={logoUrl}
-              alt={`Logo de ${business.name}`}
+              alt={`Banner de ${
+                business.fullName ||
+                `${business.firstName ?? ""} ${business.lastName ?? ""}`.trim() ||
+                "emprendedora"
+              }`}
               className="h-full w-full object-contain p-2"
             />
           ) : (
@@ -188,11 +196,15 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
           )}
         </div>
 
-        <h2 className="text-2xl font-bold text-[#211734]">{business.name}</h2>
+        <h2 className="text-2xl font-bold text-[#211734]">
+          {business.fullName ||
+            `${business.firstName ?? ""} ${business.lastName ?? ""}`.trim() ||
+            `Emprendedora #${business.id}`}
+        </h2>
 
-        {business.entrepreneur?.fullName ? (
+        {business.category?.name ? (
           <p className="mt-1 text-sm font-medium text-[#8e80aa]">
-            Por {business.entrepreneur.fullName}
+            {business.category.name}
           </p>
         ) : null}
 
@@ -340,7 +352,7 @@ export function EntrepreneursPage() {
 
         <section className="mx-auto max-w-[1224px] px-5 pt-8 lg:px-0">
           <p className="mb-4 text-base font-medium text-[#6d6383]">
-            Mostrando {businesses.length} emprendimientos de {totalBusinesses}
+            Mostrando {businesses.length} emprendedoras de {totalBusinesses}
           </p>
 
           {errorMessage ? (
@@ -364,7 +376,7 @@ export function EntrepreneursPage() {
             </div>
           ) : (
             <div className="rounded-[24px] bg-white px-6 py-20 text-center text-[#6d6383]">
-              No encontramos emprendimientos publicados.
+              No encontramos emprendedoras publicadas.
             </div>
           )}
 

@@ -24,6 +24,8 @@ import type {
 import { buildWhatsappUrl } from "@/features/public/utils/whatsapp";
 import {
   formatPublicProductPrice,
+  getPublicProductEntrepreneurName,
+  getPublicProductLocation,
   getPublicProductMainImage,
   getPublicProductWhatsappPhone,
   isPublicProductOutOfStock,
@@ -73,17 +75,6 @@ function getUniqueCategories(products: PublicProduct[]) {
   return Array.from(categoryMap.values()).sort((a, b) =>
     a.name.localeCompare(b.name, "es"),
   );
-}
-
-function getProductLocation(product: PublicProduct) {
-  const city = product.entrepreneur?.city;
-  const department = product.entrepreneur?.department;
-
-  if (city && department) {
-    return `${city}, ${department}`;
-  }
-
-  return city || department || null;
 }
 
 function CatalogHero() {
@@ -195,13 +186,13 @@ function CatalogControls({
 function ProductCard({ product }: { product: PublicProduct }) {
   const imageUrl = getPublicProductMainImage(product);
   const price = formatPublicProductPrice(product);
-  const businessName = product.business?.name ?? "Emprendimiento";
-  const location = getProductLocation(product);
+  const entrepreneurName = getPublicProductEntrepreneurName(product);
+  const location = getPublicProductLocation(product);
   const whatsappPhone = getPublicProductWhatsappPhone(product);
   const whatsappUrl = buildWhatsappUrl({
     phone: whatsappPhone,
     productName: product.name,
-    businessName,
+    businessName: entrepreneurName,
   });
   const isOutOfStock = isPublicProductOutOfStock(product);
 
@@ -230,7 +221,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
       <div className="px-6 pb-8 pt-6">
         <span className="inline-flex items-center gap-2 rounded-full bg-[#a0b8fb]/20 px-3 py-2 text-sm text-[#698ae5]">
           <ShoppingCart size={15} />
-          Por {businessName}
+          Por {entrepreneurName || "REDMUEMMA"}
         </span>
 
         <strong className="mt-4 block text-[28px] font-semibold leading-none text-[#3a2467]">
@@ -248,9 +239,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
         ) : null}
 
         <div className="mt-4 space-y-1 text-sm text-[#8e80aa]">
-          {product.entrepreneur?.fullName ? (
-            <p>Emprendedora: {product.entrepreneur.fullName}</p>
-          ) : null}
+          <p>Emprendedora: {entrepreneurName}</p>
 
           {location ? <p>{location}</p> : null}
         </div>
@@ -258,9 +247,9 @@ function ProductCard({ product }: { product: PublicProduct }) {
         <PublicSocialLinks
           className="mt-5"
           itemClassName="h-9 min-w-9 px-0 text-[#6d6383]"
-          facebookUrl={product.business?.facebookUrl}
-          instagramUrl={product.business?.instagramUrl}
-          tiktokUrl={product.business?.tiktokUrl}
+          facebookUrl={product.entrepreneur?.facebookUrl}
+          instagramUrl={product.entrepreneur?.instagramUrl}
+          tiktokUrl={product.entrepreneur?.tiktokUrl}
         />
 
         {whatsappUrl ? (

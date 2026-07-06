@@ -1,71 +1,71 @@
-export interface PublicBusinessCategory {
+export interface PublicEntrepreneurCategory {
   id: string;
   name: string;
   slug: string;
 }
 
-export interface PublicBusinessEntrepreneur {
-  id: string;
-  fullName?: string | null;
-  city?: string | null;
-  department?: string | null;
-  profilePhotoUrl?: string | null;
-}
-
-export interface PublicBusinessProductSummary {
+export interface PublicEntrepreneurProductSummary {
   id: string;
   name: string;
   slug: string;
   mainImageUrl?: string | null;
 }
 
-export interface PublicBusiness {
+export interface PublicEntrepreneur {
   id: string;
-  entrepreneurId?: string | null;
-  mainCategoryId?: string | null;
+  userId?: string | null;
+  categoryId?: string | null;
 
-  name: string;
-  slug: string;
-  status?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  fullName?: string | null;
+  slug?: string | null;
 
-  shortDescription?: string | null;
+  shortBio?: string | null;
+  bio?: string | null;
+  personalStory?: string | null;
   description?: string | null;
-  story?: string | null;
 
-  logoUrl?: string | null;
+  photoUrl?: string | null;
+  profilePhotoUrl?: string | null;
   bannerUrl?: string | null;
-  coverImageUrl?: string | null;
-
-  contactEmail?: string | null;
-  contactPhone?: string | null;
-  contactWhatsapp?: string | null;
-  addressText?: string | null;
 
   email?: string | null;
   phone?: string | null;
   whatsapp?: string | null;
-  address?: string | null;
-
-  city?: string | null;
-  department?: string | null;
-  country?: string | null;
 
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   tiktokUrl?: string | null;
+  youtubeUrl?: string | null;
   websiteUrl?: string | null;
 
-  category?: PublicBusinessCategory | null;
-  mainCategory?: PublicBusinessCategory | null;
-  entrepreneur?: PublicBusinessEntrepreneur | null;
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
+  locationText?: string | null;
+
+  status?: string | null;
+  isFeatured?: boolean | null;
+  featuredOrder?: number | null;
+
+  category?: PublicEntrepreneurCategory | null;
 
   productsCount?: number | null;
   productCount?: number | null;
-  products?: PublicBusinessProductSummary[];
+  products?: PublicEntrepreneurProductSummary[];
 
   createdAt?: string | null;
   updatedAt?: string | null;
 }
+
+/**
+ * Alias temporales para no romper imports actuales.
+ * En una fase posterior podemos renombrar archivos a publicEntrepreneur.*
+ */
+export type PublicBusiness = PublicEntrepreneur;
+export type PublicBusinessCategory = PublicEntrepreneurCategory;
+export type PublicBusinessProductSummary = PublicEntrepreneurProductSummary;
 
 export interface PublicBusinessesPagination {
   page: number;
@@ -77,7 +77,7 @@ export interface PublicBusinessesPagination {
 }
 
 export interface PublicBusinessesData {
-  businesses: PublicBusiness[];
+  businesses: PublicEntrepreneur[];
   pagination: PublicBusinessesPagination;
 }
 

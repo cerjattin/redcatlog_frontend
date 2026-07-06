@@ -1,12 +1,23 @@
 import { z } from "zod";
 
 export const productSchema = z.object({
-  categoryId: z.string().optional(),
-  name: z.string().min(2, "El nombre es obligatorio"),
-  shortDescription: z.string().optional(),
+  entrepreneurId: z.string().min(1, "Selecciona una emprendedora"),
+
+  categoryId: z.string().nullable().optional(),
+
+  name: z.string().min(3, "El nombre debe tener mínimo 3 caracteres"),
+
+  slug: z
+    .string()
+    .min(3, "El slug debe tener mínimo 3 caracteres")
+    .regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
+
+  shortDescription: z.string().max(500).optional(),
   description: z.string().optional(),
+
   price: z.number().optional(),
   hasPrice: z.boolean(),
+
   stock: z.number().optional(),
   managesStock: z.boolean(),
 });
