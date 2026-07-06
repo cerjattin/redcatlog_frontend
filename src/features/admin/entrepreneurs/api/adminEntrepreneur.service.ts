@@ -8,9 +8,14 @@ import type {
   RejectEntrepreneurRequest,
   UpdateEntrepreneurRequest,
   UpdateEntrepreneurStatusRequest,
+  UploadEntrepreneurImageResponse,
 } from "@/features/admin/entrepreneurs/types/adminEntrepreneur.types";
 
 type UnknownRecord = Record<string, unknown>;
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE_MB = 3;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null;
@@ -97,6 +102,24 @@ function normalizeEntrepreneurResponse(payload: unknown): AdminEntrepreneur {
   return data as unknown as AdminEntrepreneur;
 }
 
+function normalizeUploadImageResponse(
+  payload: unknown,
+): UploadEntrepreneurImageResponse {
+  const data = getDataFromPayload(payload);
+
+  return data as unknown as UploadEntrepreneurImageResponse;
+}
+
+function validateImageFile(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("Formato no permitido. Usa JPG, PNG o WEBP.");
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    throw new Error(`La imagen no puede superar ${MAX_IMAGE_SIZE_MB} MB.`);
+  }
+}
+
 export const adminEntrepreneurService = {
   async listEntrepreneurs(
     params?: AdminEntrepreneurListQuery,
@@ -159,5 +182,38 @@ export const adminEntrepreneurService = {
     );
 
     return normalizeEntrepreneurResponse(response.data);
+  },
+
+  async uploadEntrepreneurImage(
+    file: File,
+    metadata?: {
+      title?: string;
+      description?: string;
+      altText?: string;
+    },
+  ): Promise<UploadEntrepreneurImageResponse> {
+    validateImageFile(file);
+
+    const formData = new FormData();
+    formData.append("image", file, file.name);
+
+    if (metadata?.title) {
+      formData.append("title", metadata.title);
+    }
+
+    if (metadata?.description) {
+      formData.append("description", metadata.description);
+    }
+
+    if (metadata?.altText) {
+      formData.append("altText", metadata.altText);
+    }
+
+    const response = await api.post<unknown>(
+      "/uploads/images/entrepreneurs",
+      formData,
+    );
+
+    return normalizeUploadImageResponse(response.data);
   },
 };

@@ -3,6 +3,7 @@ import {
   Check,
   ExternalLink,
   ImageOff,
+  Pencil,
   UserX,
   X,
 } from "lucide-react";
@@ -71,6 +72,10 @@ function getEntrepreneurName(entrepreneur: AdminEntrepreneur) {
   const name = `${firstName} ${lastName}`.trim();
 
   return name || `Emprendedora #${entrepreneur.id}`;
+}
+
+function getEditEntrepreneurPath(id: string) {
+  return paths.admin.editEntrepreneur.replace(":id", id);
 }
 
 function getEmail(entrepreneur: AdminEntrepreneur) {
@@ -271,6 +276,14 @@ export function AdminEntrepreneurDetailPage() {
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => navigate(getEditEntrepreneurPath(entrepreneur.id))}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
             </Button>
 
             <Button disabled={actionLoading} onClick={handleApprove}>

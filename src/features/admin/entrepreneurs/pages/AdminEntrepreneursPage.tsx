@@ -1,4 +1,4 @@
-import { Check, Eye, Search, UserX, X } from "lucide-react";
+import { Check, Eye, Search, Plus, UserX, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -208,6 +208,12 @@ export function AdminEntrepreneursPage() {
         eyebrow="Administración"
         title="Gestión de emprendedoras"
         description="Revisa perfiles, datos de contacto, categoría, redes sociales y estado de aprobación."
+        actions={
+          <Button onClick={() => navigate(paths.admin.newEntrepreneur)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva emprendedora
+          </Button>
+        }
       />
 
       <Card className="mb-5">

@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { Save } from "lucide-react";
+import { ImageOff, Save, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -20,7 +21,14 @@ import {
   type EntrepreneurFormValues,
 } from "@/features/admin/entrepreneurs/schemas/entrepreneur.schema";
 import { paths } from "@/routes/paths";
+import { buildImageUrl } from "@/utils/image";
 import { createSlug } from "@/utils/slug";
+
+type ImageTarget = "photo" | "banner";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE_MB = 3;
+const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 function normalizeText(value?: string | number | null) {
   return value === null || value === undefined ? "" : String(value);
@@ -48,12 +56,101 @@ function getEntrepreneurDetailPath(id: string) {
   return paths.admin.entrepreneurDetail.replace(":id", id);
 }
 
+function validateLocalImage(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return "Formato no permitido. Usa JPG, PNG o WEBP.";
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `La imagen no puede superar ${MAX_IMAGE_SIZE_MB} MB.`;
+  }
+
+  return null;
+}
+
+function ImageUploader({
+  title,
+  description,
+  currentImageUrl,
+  previewUrl,
+  onChange,
+  onClear,
+}: {
+  title: string;
+  description: string;
+  currentImageUrl: string | null;
+  previewUrl: string | null;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onClear: () => void;
+}) {
+  const imageUrl = previewUrl || currentImageUrl;
+
+  return (
+    <div className="rounded-2xl border border-ink-100 bg-ink-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold text-ink-900">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-ink-500">{description}</p>
+        </div>
+
+        {previewUrl ? (
+          <button
+            type="button"
+            className="rounded-xl p-2 text-ink-500 hover:bg-white hover:text-red-600"
+            onClick={onClear}
+            aria-label="Limpiar imagen seleccionada"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-ink-100 bg-white">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="h-52 w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-52 flex-col items-center justify-center text-ink-400">
+            <ImageOff className="h-8 w-8" />
+            <p className="mt-2 text-sm">Sin imagen</p>
+          </div>
+        )}
+      </div>
+
+      <label className="mt-4 flex cursor-pointer items-center justify-center rounded-xl border border-dashed border-primary-200 bg-white px-4 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50">
+        <Upload className="mr-2 h-4 w-4" />
+        Seleccionar imagen
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={onChange}
+        />
+      </label>
+
+      {previewUrl ? (
+        <p className="mt-3 text-xs font-medium text-amber-700">
+          Esta imagen se subirá al guardar.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function EntrepreneurFormPage() {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const isEditMode = Boolean(params.id);
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -97,6 +194,11 @@ export function EntrepreneurFormPage() {
 
   const firstName = useWatch({ control, name: "firstName" });
   const lastName = useWatch({ control, name: "lastName" });
+  const photoUrl = useWatch({ control, name: "photoUrl" });
+  const bannerUrl = useWatch({ control, name: "bannerUrl" });
+
+  const currentPhotoUrl = buildImageUrl(photoUrl || null);
+  const currentBannerUrl = buildImageUrl(bannerUrl || null);
 
   useEffect(() => {
     const name = `${firstName ?? ""} ${lastName ?? ""}`.trim();
@@ -113,6 +215,18 @@ export function EntrepreneurFormPage() {
       });
     }
   }, [firstName, lastName, setValue]);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+
+      if (bannerPreviewUrl) {
+        URL.revokeObjectURL(bannerPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl, bannerPreviewUrl]);
 
   useEffect(() => {
     async function loadData() {
@@ -184,9 +298,104 @@ export function EntrepreneurFormPage() {
     void loadData();
   }, [params.id, reset]);
 
+  function handleImageChange(
+    target: ImageTarget,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0] ?? null;
+
+    setSubmitError(null);
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateLocalImage(file);
+
+    if (validationError) {
+      setSubmitError(validationError);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+
+    if (target === "photo") {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+
+      setPhotoFile(file);
+      setPhotoPreviewUrl(previewUrl);
+      return;
+    }
+
+    if (bannerPreviewUrl) {
+      URL.revokeObjectURL(bannerPreviewUrl);
+    }
+
+    setBannerFile(file);
+    setBannerPreviewUrl(previewUrl);
+  }
+
+  function handleClearImage(target: ImageTarget) {
+    if (target === "photo") {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+
+      setPhotoFile(null);
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    if (bannerPreviewUrl) {
+      URL.revokeObjectURL(bannerPreviewUrl);
+    }
+
+    setBannerFile(null);
+    setBannerPreviewUrl(null);
+  }
+
+  async function uploadPendingImages(values: EntrepreneurFormValues) {
+    let uploadedPhotoUrl = nullable(values.photoUrl);
+    let uploadedBannerUrl = nullable(values.bannerUrl);
+
+    const publicName =
+      nullable(values.fullName) ||
+      `${values.firstName} ${values.lastName}`.trim();
+
+    if (photoFile) {
+      const uploadedPhoto =
+        await adminEntrepreneurService.uploadEntrepreneurImage(photoFile, {
+          title: `Foto de ${publicName}`,
+          altText: `Foto de ${publicName}`,
+        });
+
+      uploadedPhotoUrl = uploadedPhoto.fileUrl;
+    }
+
+    if (bannerFile) {
+      const uploadedBanner =
+        await adminEntrepreneurService.uploadEntrepreneurImage(bannerFile, {
+          title: `Banner de ${publicName}`,
+          altText: `Banner de ${publicName}`,
+        });
+
+      uploadedBannerUrl = uploadedBanner.fileUrl;
+    }
+
+    return {
+      photoUrl: uploadedPhotoUrl,
+      bannerUrl: uploadedBannerUrl,
+    };
+  }
+
   async function onSubmit(values: EntrepreneurFormValues) {
     try {
       setSubmitError(null);
+
+      const uploadedImages = await uploadPendingImages(values);
 
       const payload = {
         categoryId: values.categoryId || null,
@@ -204,8 +413,8 @@ export function EntrepreneurFormPage() {
         personalStory: nullable(values.personalStory),
         locationText: nullable(values.locationText),
 
-        photoUrl: nullable(values.photoUrl),
-        bannerUrl: nullable(values.bannerUrl),
+        photoUrl: uploadedImages.photoUrl,
+        bannerUrl: uploadedImages.bannerUrl,
 
         email: nullable(values.email),
         phone: nullable(values.phone),
@@ -253,7 +462,7 @@ export function EntrepreneurFormPage() {
       <PageHeader
         eyebrow="Emprendedoras"
         title={isEditMode ? "Editar emprendedora" : "Crear emprendedora"}
-        description="Gestiona información personal, categoría, contacto, WhatsApp y redes sociales."
+        description="Gestiona información personal, categoría, contacto, WhatsApp, redes sociales, foto y banner."
         actions={
           <Button
             type="button"
@@ -388,6 +597,31 @@ export function EntrepreneurFormPage() {
 
           <Card>
             <h2 className="text-lg font-bold text-ink-900">Imágenes</h2>
+
+            <p className="mt-2 text-sm leading-6 text-ink-500">
+              Puedes subir una foto de perfil y un banner. Se aceptan JPG, PNG o
+              WEBP, máximo {MAX_IMAGE_SIZE_MB} MB por archivo.
+            </p>
+
+            <div className="mt-5 grid gap-5 lg:grid-cols-2">
+              <ImageUploader
+                title="Foto de perfil"
+                description="Imagen cuadrada o retrato para identificar a la emprendedora."
+                currentImageUrl={currentPhotoUrl}
+                previewUrl={photoPreviewUrl}
+                onChange={(event) => handleImageChange("photo", event)}
+                onClear={() => handleClearImage("photo")}
+              />
+
+              <ImageUploader
+                title="Banner"
+                description="Imagen horizontal para destacar el perfil público."
+                currentImageUrl={currentBannerUrl}
+                previewUrl={bannerPreviewUrl}
+                onChange={(event) => handleImageChange("banner", event)}
+                onClear={() => handleClearImage("banner")}
+              />
+            </div>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               <Input

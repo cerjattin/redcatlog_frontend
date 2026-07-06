@@ -147,3 +147,13 @@ export type RejectEntrepreneurRequest = {
 export type UpdateEntrepreneurStatusRequest = {
   status: EntrepreneurStatus;
 };
+
+export type UploadEntrepreneurImageResponse = {
+  fileUrl: string;
+  mediaFileId: string;
+  fileName: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  folder: string;
+};
