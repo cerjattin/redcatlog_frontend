@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { ImageFilePicker } from "@/components/forms/ImageFilePicker";
 import { Loader } from "@/components/feedback/Loader";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -68,6 +69,8 @@ export function NewProductPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [createdProductId, setCreatedProductId] = useState<string | null>(null);
 
   const {
     register,
@@ -130,25 +133,46 @@ export function NewProductPage() {
   }, []);
 
   async function onSubmit(values: CreateProductFormValues) {
+    let productWasCreated = Boolean(createdProductId);
+
     try {
       setSubmitError(null);
 
-      const product = await productService.createMyProduct({
-        entrepreneurId: values.entrepreneurId,
-        categoryId: values.categoryId || null,
-        name: values.name,
-        slug: values.slug,
-        shortDescription: values.shortDescription || null,
-        description: values.description || null,
-        price: values.hasPrice ? (values.price ?? null) : null,
-        hasPrice: values.hasPrice,
-        stock: values.managesStock ? (values.stock ?? null) : null,
-        managesStock: values.managesStock,
-      });
+      let productId = createdProductId;
 
-      navigate(getProductDetailPath(product.id));
+      if (!productId) {
+        const product = await productService.createMyProduct({
+          entrepreneurId: values.entrepreneurId,
+          categoryId: values.categoryId || null,
+          name: values.name,
+          slug: values.slug,
+          shortDescription: values.shortDescription || null,
+          description: values.description || null,
+          price: values.hasPrice ? (values.price ?? null) : null,
+          hasPrice: values.hasPrice,
+          stock: values.managesStock ? (values.stock ?? null) : null,
+          managesStock: values.managesStock,
+        });
+
+        productId = product.id;
+        productWasCreated = true;
+        setCreatedProductId(product.id);
+      }
+
+      for (const file of imageFiles) {
+        await productService.uploadProductImage(productId, file, {
+          altText: values.name,
+        });
+        setImageFiles((current) => current.filter((item) => item !== file));
+      }
+
+      navigate(getProductDetailPath(productId));
     } catch (error) {
-      setSubmitError(getApiErrorMessage(error));
+      setSubmitError(
+        productWasCreated
+          ? "El producto fue creado, pero no se cargaron todas las imágenes. Reintenta para completar el registro."
+          : getApiErrorMessage(error),
+      );
     }
   }
 
@@ -312,6 +336,16 @@ export function NewProductPage() {
             />
           </div>
 
+          <div className="mt-5">
+            <ImageFilePicker
+              label="Imágenes del producto"
+              description="Selecciona hasta tres imágenes. Se cargarán junto con la creación del producto."
+              files={imageFiles}
+              onFilesChange={setImageFiles}
+              maxFiles={3}
+            />
+          </div>
+
           {submitError ? (
             <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
               {submitError}
@@ -329,7 +363,7 @@ export function NewProductPage() {
 
             <Button type="submit" isLoading={isSubmitting}>
               <Save className="mr-2 h-4 w-4" />
-              Crear producto
+              {createdProductId ? "Reintentar imágenes" : "Crear producto"}
             </Button>
           </div>
         </Card>

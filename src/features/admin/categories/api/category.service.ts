@@ -61,7 +61,33 @@ function normalizeCategory(payload: unknown): Category {
   return data as Category;
 }
 
+function normalizeUploadedImage(payload: unknown): string {
+  const data = getDataFromPayload(payload);
+
+  if (isRecord(data) && typeof data.fileUrl === "string") {
+    return data.fileUrl;
+  }
+
+  if (isRecord(data) && typeof data.url === "string") {
+    return data.url;
+  }
+
+  throw new Error("El servidor no devolvió la URL de la imagen.");
+}
+
 export const categoryService = {
+  async uploadCategoryImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("image", file, file.name);
+
+    const response = await api.post<unknown>(
+      "/uploads/images/gallery",
+      formData,
+    );
+
+    return normalizeUploadedImage(response.data);
+  },
+
   async listCategories(params?: CategoryFilters): Promise<Category[]> {
     const response = await api.get<unknown>("/categories", {
       params: cleanParams(params),

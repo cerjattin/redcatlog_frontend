@@ -1,7 +1,4 @@
-import axios from "axios";
-
 import { api } from "@/lib/axios";
-import { env } from "@/lib/env";
 import type {
   CreateProductRequest,
   ProductSummary,
@@ -30,16 +27,6 @@ type ProductDetailEnvelope = {
       };
 };
 
-type UploadImageEnvelope = {
-  success: boolean;
-  message: string;
-  data:
-    | ProductSummary
-    | {
-        product?: ProductSummary;
-      };
-};
-
 function unwrapProductList(envelope: ProductListEnvelope): ProductSummary[] {
   if (Array.isArray(envelope.data)) {
     return envelope.data;
@@ -48,7 +35,7 @@ function unwrapProductList(envelope: ProductListEnvelope): ProductSummary[] {
   return envelope.data.items ?? envelope.data.products ?? [];
 }
 
-function unwrapProduct(envelope: ProductDetailEnvelope | UploadImageEnvelope) {
+function unwrapProduct(envelope: ProductDetailEnvelope) {
   if (
     envelope.data &&
     typeof envelope.data === "object" &&
@@ -59,20 +46,6 @@ function unwrapProduct(envelope: ProductDetailEnvelope | UploadImageEnvelope) {
   }
 
   return envelope.data as ProductSummary;
-}
-
-function getAccessToken() {
-  const rawAuth = localStorage.getItem("red-mujeres-auth");
-
-  if (!rawAuth) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawAuth)?.state?.accessToken ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export const productService = {
@@ -119,23 +92,32 @@ export const productService = {
   async uploadProductImage(
     productId: string,
     file: File,
+    metadata?: {
+      altText?: string;
+      isMain?: boolean;
+      sortOrder?: number;
+    },
   ): Promise<ProductSummary> {
     const formData = new FormData();
 
     formData.append("image", file, file.name);
 
-    const accessToken = getAccessToken();
+    if (metadata?.altText) {
+      formData.append("altText", metadata.altText);
+    }
 
-    const { data } = await axios.post<UploadImageEnvelope>(
-      `${env.apiBaseUrl}/products/${productId}/images/upload`,
-      formData,
-      {
-        headers: accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : undefined,
-      },
+    if (metadata?.isMain !== undefined) {
+      formData.append("isMain", String(metadata.isMain));
+    }
+
+    if (metadata?.sortOrder !== undefined) {
+      formData.append("sortOrder", String(metadata.sortOrder));
+    }
+
+    await api.post(`/products/${productId}/images/upload`, formData);
+
+    const { data } = await api.get<ProductDetailEnvelope>(
+      `/products/${productId}`,
     );
 
     return unwrapProduct(data);

@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { ImageFilePicker } from "@/components/forms/ImageFilePicker";
 import { Loader } from "@/components/feedback/Loader";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +20,7 @@ import {
 } from "@/features/admin/categories/schemas/category.schema";
 import type { Category } from "@/features/admin/categories/types/category.types";
 import { paths } from "@/routes/paths";
+import { buildImageUrl } from "@/utils/image";
 import { createSlug } from "@/utils/slug";
 
 function normalizeValue(value?: string | number | null) {
@@ -45,6 +47,7 @@ export function CategoryFormPage() {
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [iconFiles, setIconFiles] = useState<File[]>([]);
 
   const {
     register,
@@ -68,6 +71,7 @@ export function CategoryFormPage() {
   });
 
   const name = useWatch({ control, name: "name" });
+  const iconUrl = useWatch({ control, name: "iconUrl" });
 
   const parentOptions = useMemo(
     () => categories.filter((category) => category.id !== params.id),
@@ -118,11 +122,15 @@ export function CategoryFormPage() {
     try {
       setSubmitError(null);
 
+      const uploadedIconUrl = iconFiles[0]
+        ? await categoryService.uploadCategoryImage(iconFiles[0])
+        : null;
+
       const payload = {
         ...values,
         parentId: values.parentId || null,
         description: values.description || null,
-        iconUrl: values.iconUrl || null,
+        iconUrl: uploadedIconUrl || values.iconUrl || null,
       };
 
       if (params.id) {
@@ -231,8 +239,8 @@ export function CategoryFormPage() {
             />
 
             <Input
-              label="Icon URL"
-              placeholder="/uploads/categories/icon.png"
+              label="URL del icono (opcional)"
+              placeholder="/uploads/gallery/icono-categoria.webp"
               error={errors.iconUrl?.message}
               {...register("iconUrl")}
             />
@@ -245,6 +253,16 @@ export function CategoryFormPage() {
               />
               Categoría activa
             </label>
+          </div>
+
+          <div className="mt-5">
+            <ImageFilePicker
+              label="Imagen de la categoría"
+              description="Selecciona el icono o imagen que se mostrará cuando la categoría sea pública."
+              files={iconFiles}
+              onFilesChange={setIconFiles}
+              currentImageUrl={buildImageUrl(iconUrl)}
+            />
           </div>
 
           <div className="mt-5">
