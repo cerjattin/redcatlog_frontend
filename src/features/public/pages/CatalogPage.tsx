@@ -9,6 +9,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
+import { Link } from "react-router-dom";
+
 import { PublicPagination } from "@/features/public/components/PublicPagination";
 import { publicProductService } from "@/features/public/api/publicProduct.service";
 import {
@@ -31,6 +33,7 @@ import {
   isPublicProductOutOfStock,
 } from "@/features/public/utils/productDisplay";
 import { cn } from "@/utils/cn";
+import { paths } from "@/routes/paths";
 
 const PAGE_SIZE = 12;
 
@@ -75,6 +78,10 @@ function getUniqueCategories(products: PublicProduct[]) {
   return Array.from(categoryMap.values()).sort((a, b) =>
     a.name.localeCompare(b.name, "es"),
   );
+}
+
+function getPublicProductDetailPath(slug: string) {
+  return paths.public.productDetail.replace(":slug", slug);
 }
 
 function CatalogHero() {
@@ -228,9 +235,12 @@ function ProductCard({ product }: { product: PublicProduct }) {
           {price}
         </strong>
 
-        <h2 className="mt-2 text-xl font-semibold text-[#211734]">
+        <Link
+          to={getPublicProductDetailPath(product.slug)}
+          className="block text-2xl font-bold text-[#211734] transition hover:text-[#7b3fe4]"
+        >
           {product.name}
-        </h2>
+        </Link>
 
         {product.shortDescription ? (
           <p className="mt-3 text-sm leading-6 text-[#6d6383]">

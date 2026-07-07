@@ -18,7 +18,8 @@ import {
   PublicHeader,
 } from "@/features/public/components/PublicLayout";
 import { PublicSocialLinks } from "@/features/public/components/PublicSocialLinks";
-
+import { Link } from "react-router-dom";
+import { paths } from "@/routes/paths";
 import type {
   PublicBusiness,
   PublicBusinessesPagination,
@@ -61,6 +62,14 @@ function getApiErrorMessage(error: unknown) {
   }
 
   return "No fue posible cargar los emprendimientos.";
+}
+
+function getPublicEntrepreneurDetailPath(slug?: string | null) {
+  if (!slug) {
+    return paths.public.entrepreneurs;
+  }
+
+  return paths.public.entrepreneurDetail.replace(":slug", slug);
 }
 
 function EntrepreneursHero() {
@@ -196,11 +205,14 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
           )}
         </div>
 
-        <h2 className="text-2xl font-bold text-[#211734]">
+        <Link
+          to={getPublicEntrepreneurDetailPath(business.slug)}
+          className="block text-2xl font-bold text-[#211734] transition hover:text-[#7b3fe4]"
+        >
           {business.fullName ||
             `${business.firstName ?? ""} ${business.lastName ?? ""}`.trim() ||
             `Emprendedora #${business.id}`}
-        </h2>
+        </Link>
 
         {business.category?.name ? (
           <p className="mt-1 text-sm font-medium text-[#8e80aa]">

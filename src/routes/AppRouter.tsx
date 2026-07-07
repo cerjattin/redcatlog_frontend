@@ -13,6 +13,8 @@ import { EntrepreneurFormPage } from "@/features/admin/entrepreneurs/pages/Entre
 import { AdminEntrepreneursPage } from "@/features/admin/entrepreneurs/pages/AdminEntrepreneursPage";
 import { AdminDashboardPage } from "@/features/admin/pages/AdminDashboardPage";
 import { AdminProductDetailPage } from "@/features/admin/products/pages/AdminProductDetailPage";
+import { PublicEntrepreneurDetailPage } from "@/features/public/pages/PublicEntrepreneurDetailPage";
+import { PublicProductDetailPage } from "@/features/public/pages/PublicProductDetailPage";
 import { AdminProductsPage } from "@/features/admin/products/pages/AdminProductsPage";
 import { AdminUserDetailPage } from "@/features/admin/users/pages/AdminUserDetailPage";
 import { AdminUsersPage } from "@/features/admin/users/pages/AdminUsersPage";
@@ -72,6 +74,14 @@ const router = createBrowserRouter([
   {
     path: paths.public.register,
     element: <RegisterPage />,
+  },
+  {
+    path: paths.public.productDetail,
+    element: <PublicProductDetailPage />,
+  },
+  {
+    path: paths.public.entrepreneurDetail,
+    element: <PublicEntrepreneurDetailPage />,
   },
   {
     path: paths.auth.forgotPassword,

@@ -116,6 +116,22 @@ function normalizePublicEntrepreneursResponse(
   };
 }
 
+function normalizePublicEntrepreneurDetailResponse(
+  payload: unknown,
+): PublicBusiness {
+  const data = getDataFromPayload(payload);
+
+  if (isRecord(data) && isRecord(data.entrepreneur)) {
+    return data.entrepreneur as unknown as PublicBusiness;
+  }
+
+  if (isRecord(data) && isRecord(data.business)) {
+    return data.business as unknown as PublicBusiness;
+  }
+
+  return data as unknown as PublicBusiness;
+}
+
 export const publicBusinessService = {
   async getBusinesses(
     params?: GetPublicBusinessesParams,
@@ -125,5 +141,10 @@ export const publicBusinessService = {
     });
 
     return normalizePublicEntrepreneursResponse(response.data);
+  },
+  async getBusinessBySlug(slug: string): Promise<PublicBusiness> {
+    const response = await api.get<unknown>(`/public/entrepreneurs/${slug}`);
+
+    return normalizePublicEntrepreneurDetailResponse(response.data);
   },
 };
