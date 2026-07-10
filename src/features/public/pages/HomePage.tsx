@@ -106,7 +106,13 @@ function formatStatValue(value: number) {
   return value > 0 ? `${value}+` : "0";
 }
 
-function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
+function SectionHeading({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
     <div className="text-center">
       <h2 className="text-3xl font-bold leading-[1.1] text-[#211734] md:text-[40px]">
@@ -119,7 +125,13 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
   );
 }
 
-function PrimaryLink({ to, children }: { to: string; children: React.ReactNode }) {
+function PrimaryLink({
+  to,
+  children,
+}: {
+  to: string;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       to={to}
@@ -159,10 +171,10 @@ function Hero() {
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[560px] lg:translate-x-3">
+        <div className="relative mx-auto w-full max-w-[560px] md:max-w-[640px] lg:max-w-[720px] lg:translate-x-8">
           <img
-            src="/home/hero.png"
-            alt="Mujer emprendedora sonriendo"
+            src="/home/hero2.png"
+            alt="Mujeres emprendedoras con productos"
             className="relative z-10 w-full"
           />
 
@@ -205,10 +217,34 @@ function Impact({
   citiesTotal: number;
 }) {
   const items = [
-    { label: "Mujeres emprendedoras", value: entrepreneursTotal, icon: UsersRound, color: "#d94673", bg: "#ff88ac1a" },
-    { label: "Productos únicos", value: productsTotal, icon: Package, color: "#698ae5", bg: "#a0b8fb1a" },
-    { label: "Categorías", value: categoriesTotal, icon: Heart, color: "#fb7d58", bg: "#fbab8e1a" },
-    { label: "Ciudades", value: citiesTotal, icon: MapPin, color: "#b545df", bg: "#d66eff1a" },
+    {
+      label: "Mujeres emprendedoras",
+      value: entrepreneursTotal,
+      icon: UsersRound,
+      color: "#d94673",
+      bg: "#ff88ac1a",
+    },
+    {
+      label: "Productos únicos",
+      value: productsTotal,
+      icon: Package,
+      color: "#698ae5",
+      bg: "#a0b8fb1a",
+    },
+    {
+      label: "Categorías",
+      value: categoriesTotal,
+      icon: Heart,
+      color: "#fb7d58",
+      bg: "#fbab8e1a",
+    },
+    {
+      label: "Ciudades",
+      value: citiesTotal,
+      icon: MapPin,
+      color: "#b545df",
+      bg: "#d66eff1a",
+    },
   ];
 
   return (
@@ -221,7 +257,8 @@ function Impact({
           </h2>
           <p className="mt-3 text-lg leading-[1.35] text-[#6d6383] md:text-2xl">
             Gracias a tu apoyo y la creatividad
-            <br className="hidden sm:block" /> de las mujeres emprendedoras de esta red.
+            <br className="hidden sm:block" /> de las mujeres emprendedoras de
+            esta red.
           </p>
         </div>
 
@@ -265,7 +302,8 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((category, index) => {
             const slug = normalizeSlug(category.slug || category.name);
-            const fallback = fallbackCategories[index % fallbackCategories.length];
+            const fallback =
+              fallbackCategories[index % fallbackCategories.length];
             const image = categoryImages[slug] ?? categoryImages[fallback.slug];
 
             return (
@@ -310,7 +348,9 @@ function ProductCard({ product }: { product: PublicProduct }) {
       <div className="p-5 md:p-6">
         <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#a0b8fb]/20 px-3 py-2 text-xs text-[#698ae5]">
           <ShoppingBag className="h-4 w-4 shrink-0" />
-          <span className="truncate">Por {getPublicProductEntrepreneurName(product)}</span>
+          <span className="truncate">
+            Por {getPublicProductEntrepreneurName(product)}
+          </span>
         </span>
         <strong className="mt-4 block text-[28px] font-semibold leading-none text-[#3a2467]">
           {formatPublicProductPrice(product)}
@@ -323,7 +363,13 @@ function ProductCard({ product }: { product: PublicProduct }) {
   );
 }
 
-function Products({ products, isLoading }: { products: PublicProduct[]; isLoading: boolean }) {
+function Products({
+  products,
+  isLoading,
+}: {
+  products: PublicProduct[];
+  isLoading: boolean;
+}) {
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(122deg,#ffe9e1_0%,#fff_50%,#fff0f4_100%)] py-[72px]">
       <div className="mx-auto max-w-[1224px] px-5 md:px-8 lg:px-0">
@@ -335,9 +381,14 @@ function Products({ products, isLoading }: { products: PublicProduct[]; isLoadin
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {isLoading
             ? Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-[440px] animate-pulse rounded-[24px] bg-white/75" />
+                <div
+                  key={index}
+                  className="h-[440px] animate-pulse rounded-[24px] bg-white/75"
+                />
               ))
-            : products.map((product) => <ProductCard key={product.id} product={product} />)}
+            : products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
         </div>
 
         {!isLoading && products.length === 0 ? (
@@ -385,13 +436,14 @@ function Story() {
             <span className="font-bold text-[#fbab8e]">empoderamiento</span>
           </h2>
           <p className="mt-8 text-lg leading-[1.55] text-white/90 md:text-2xl">
-            Al apoyar estos emprendimientos, no solo adquieres productos únicos y
-            de calidad, sino que también contribuyes a la transformación de vidas
-            y comunidades enteras.
+            Al apoyar estos emprendimientos, no solo adquieres productos únicos
+            y de calidad, sino que también contribuyes a la transformación de
+            vidas y comunidades enteras.
           </p>
           <p className="mt-5 text-lg leading-[1.55] text-white/90 md:text-2xl">
-            Cada artículo representa horas de dedicación, talento y la valentía de
-            mujeres que han decidido escribir un nuevo capítulo en sus historias.
+            Cada artículo representa horas de dedicación, talento y la valentía
+            de mujeres que han decidido escribir un nuevo capítulo en sus
+            historias.
           </p>
           <Link
             to={paths.public.about}
@@ -421,8 +473,8 @@ function CallToAction() {
           </h2>
           <p className="mt-5 text-lg leading-[1.35] md:text-2xl">
             Estos emprendimientos no son sólo negocios, son evidencia de que el
-            talento y la determinación no tienen límites. Al apoyarlos, eres parte
-            de algo más grande.
+            talento y la determinación no tienen límites. Al apoyarlos, eres
+            parte de algo más grande.
           </p>
           <div className="mt-8">
             <Link
@@ -481,7 +533,9 @@ export function HomePage() {
           productsResult.status === "rejected" &&
           entrepreneursResult.status === "rejected"
         ) {
-          setHomeError("No fue posible cargar la información pública desde el backend.");
+          setHomeError(
+            "No fue posible cargar la información pública desde el backend.",
+          );
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -495,7 +549,10 @@ export function HomePage() {
     };
   }, []);
 
-  const homeCategories = useMemo(() => buildHomeCategories(products), [products]);
+  const homeCategories = useMemo(
+    () => buildHomeCategories(products),
+    [products],
+  );
   const featuredProducts = useMemo(() => {
     const featured = products.filter((product) => product.isFeatured);
     return (featured.length > 0 ? featured : products).slice(0, 4);
