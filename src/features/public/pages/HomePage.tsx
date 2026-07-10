@@ -145,37 +145,39 @@ function PrimaryLink({
 function Hero() {
   return (
     <section className="relative min-h-[760px] overflow-hidden bg-[radial-gradient(circle_at_0%_5%,#ffe3e3_0%,#fffcfc_50%,#f2e3ff_100%)] pt-[104px] lg:min-h-[900px]">
-      <div className="relative mx-auto grid max-w-[1224px] items-center gap-10 px-5 py-14 md:px-8 lg:min-h-[796px] lg:grid-cols-[656px_1fr] lg:px-0 lg:py-16">
-        <div className="relative z-10">
-          <h1 className="max-w-[656px] text-[46px] font-bold leading-none tracking-[-0.035em] text-[#3a2467] sm:text-6xl lg:text-[72px]">
+      <div className="relative mx-auto grid max-w-[1320px] items-center gap-8 px-5 py-14 md:px-8 lg:min-h-[796px] lg:grid-cols-[560px_1fr] lg:px-6 lg:py-16 xl:grid-cols-[600px_1fr]">
+        <div className="relative z-20">
+          <h1 className="max-w-[620px] text-[46px] font-bold leading-none tracking-[-0.035em] text-[#3a2467] sm:text-6xl lg:text-[68px] xl:text-[72px]">
             Transformando historias en{" "}
             <span className="text-[#d14e75]">oportunidades</span>
           </h1>
 
-          <p className="mt-8 max-w-[656px] text-lg leading-[1.35] text-[#6d6383] md:text-2xl">
-            Descubre emprendimientos únicos creados por mujeres extraordinarias.
-            Cada producto cuenta una historia de resiliencia, creatividad y
-            esperanza.
+          <p className="mt-8 max-w-[600px] text-lg leading-[1.35] text-[#6d6383] md:text-2xl">
+            Descubre productos únicos creados por mujeres extraordinarias. Cada
+            pieza cuenta una historia de resiliencia, creatividad y esperanza.
           </p>
 
           <div className="mt-9 flex flex-wrap gap-4">
             <PrimaryLink to={paths.public.catalog}>
               Explorar catálogo <BookOpenText className="h-5 w-5" />
             </PrimaryLink>
+
             <Link
-              to={paths.public.about}
+              to={paths.public.entrepreneurs}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#6d6383] px-6 py-3.5 text-sm font-bold text-[#6d6383] transition hover:bg-white/70 md:text-lg"
             >
-              Conocer historias
+              Conocer emprendedoras
             </Link>
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[560px] md:max-w-[640px] lg:max-w-[720px] lg:translate-x-8">
+        <div className="relative mx-auto w-full max-w-[560px] md:max-w-[720px] lg:-mr-20 lg:max-w-[880px] lg:translate-x-4 xl:-mr-28 xl:max-w-[980px]">
+          <div className="absolute -inset-8 rounded-full bg-white/30 blur-3xl" />
+
           <img
             src="/home/hero2.png"
             alt="Mujeres emprendedoras con productos"
-            className="relative z-10 w-full"
+            className="relative z-10 w-full drop-shadow-[0_32px_70px_rgba(58,36,103,0.22)] md:scale-105 lg:scale-110 xl:scale-[1.15]"
           />
         </div>
       </div>
