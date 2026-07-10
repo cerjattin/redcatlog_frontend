@@ -177,22 +177,6 @@ function Hero() {
             alt="Mujeres emprendedoras con productos"
             className="relative z-10 w-full"
           />
-
-          <div className="absolute -bottom-5 left-0 z-20 w-[150px] rounded-[24px] bg-[#d66eff] p-5 text-white shadow-xl sm:left-[-32px]">
-            <div className="flex items-start gap-2 text-lg font-bold leading-tight">
-              <ShoppingBag className="mt-0.5 h-6 w-6 shrink-0" />
-              <span>Apoya marcas locales</span>
-            </div>
-            <p className="mt-3 rounded-full bg-white/25 px-3 py-1 text-center text-[10px]">
-              Comercio 100% responsable
-            </p>
-          </div>
-
-          <div className="absolute right-0 top-[46%] z-20 rounded-2xl bg-[#ff9f82] px-4 py-3 text-sm font-bold leading-tight text-[#3a2467] shadow-lg">
-            Llenas de
-            <br /> creatividad
-            <br /> y cultura
-          </div>
         </div>
       </div>
 
