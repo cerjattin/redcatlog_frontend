@@ -13,9 +13,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { publicBusinessService } from "@/features/public/api/publicBusiness.service";
+import { publicCategoryService } from "@/features/public/api/publicCategory.service";
 import { publicProductService } from "@/features/public/api/publicProduct.service";
 import { PublicLayout } from "@/features/public/components/PublicLayout";
 import type { PublicBusiness } from "@/features/public/types/publicBusiness.types";
+import type { PublicCategory } from "@/features/public/types/publicCategory.types";
 import type {
   PublicProduct,
   PublicProductCategory,
@@ -26,12 +28,15 @@ import {
   getPublicProductMainImage,
 } from "@/features/public/utils/productDisplay";
 import { paths } from "@/routes/paths";
+import { buildImageUrl } from "@/utils/image";
 
 type HomeCategory = {
   id: string;
   name: string;
   slug: string;
-  productsCount: number;
+  description?: string | null;
+  imageUrl?: string | null;
+  productsCount: number | null;
 };
 
 const fallbackCategories: HomeCategory[] = [
@@ -57,29 +62,22 @@ function normalizeSlug(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function buildHomeCategories(products: PublicProduct[]): HomeCategory[] {
-  const categoryMap = new Map<string, HomeCategory>();
-
-  products.forEach((product) => {
-    const category = product.category;
-
-    if (!category?.id) return;
-
-    const current = categoryMap.get(category.id);
-
-    categoryMap.set(category.id, {
+function buildHomeCategories(categories: PublicCategory[]): HomeCategory[] {
+  const visibleCategories = categories
+    .filter((category) => category.isActive !== false)
+    .filter((category) => category.type !== "entrepreneur")
+    .sort((first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0))
+    .slice(0, 4)
+    .map((category) => ({
       id: category.id,
       name: category.name,
       slug: category.slug || normalizeSlug(category.name),
-      productsCount: (current?.productsCount ?? 0) + 1,
-    });
-  });
+      description: category.description,
+      imageUrl: buildImageUrl(category.iconUrl),
+      productsCount: category.productsCount ?? category.productCount ?? null,
+    }));
 
-  const categories = Array.from(categoryMap.values()).sort(
-    (first, second) => second.productsCount - first.productsCount,
-  );
-
-  return categories.length > 0 ? categories.slice(0, 4) : fallbackCategories;
+  return visibleCategories.length > 0 ? visibleCategories : fallbackCategories;
 }
 
 function getUniqueCitiesCount(entrepreneurs: PublicBusiness[]) {
@@ -266,7 +264,9 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
           {categories.map((category, index) => {
             const slug = normalizeSlug(category.slug || category.name);
             const fallback = fallbackCategories[index % fallbackCategories.length];
-            const image = categoryImages[slug] ?? categoryImages[fallback.slug];
+            const image =
+              category.imageUrl ?? categoryImages[slug] ?? categoryImages[fallback.slug];
+            const productsCount = category.productsCount ?? 0;
 
             return (
               <Link
@@ -285,9 +285,9 @@ function Categories({ categories }: { categories: HomeCategory[] }) {
                     {category.name}
                   </h3>
                   <p className="mt-1 text-sm md:text-base">
-                    {category.productsCount > 0
-                      ? `${category.productsCount} producto${category.productsCount === 1 ? "" : "s"}`
-                      : "Explorar productos"}
+                    {productsCount > 0
+                      ? `${productsCount} producto${productsCount === 1 ? "" : "s"}`
+                      : category.description || "Explorar productos"}
                   </p>
                 </div>
               </Link>
@@ -440,6 +440,7 @@ function CallToAction() {
 
 export function HomePage() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
+  const [categories, setCategories] = useState<PublicCategory[]>([]);
   const [entrepreneurs, setEntrepreneurs] = useState<PublicBusiness[]>([]);
   const [productsTotal, setProductsTotal] = useState(0);
   const [entrepreneursTotal, setEntrepreneursTotal] = useState(0);
@@ -454,10 +455,12 @@ export function HomePage() {
         setIsLoading(true);
         setHomeError(null);
 
-        const [productsResult, entrepreneursResult] = await Promise.allSettled([
-          publicProductService.getProducts({ page: 1, limit: 12 }),
-          publicBusinessService.getBusinesses({ page: 1, limit: 6 }),
-        ]);
+        const [productsResult, entrepreneursResult, categoriesResult] =
+          await Promise.allSettled([
+            publicProductService.getProducts({ page: 1, limit: 12 }),
+            publicBusinessService.getBusinesses({ page: 1, limit: 6 }),
+            publicCategoryService.getCategories({ isActive: "true" }),
+          ]);
 
         if (!isMounted) return;
 
@@ -477,9 +480,16 @@ export function HomePage() {
           setEntrepreneursTotal(0);
         }
 
+        if (categoriesResult.status === "fulfilled") {
+          setCategories(categoriesResult.value);
+        } else {
+          setCategories([]);
+        }
+
         if (
           productsResult.status === "rejected" &&
-          entrepreneursResult.status === "rejected"
+          entrepreneursResult.status === "rejected" &&
+          categoriesResult.status === "rejected"
         ) {
           setHomeError("No fue posible cargar la información pública desde el backend.");
         }
@@ -495,7 +505,15 @@ export function HomePage() {
     };
   }, []);
 
-  const homeCategories = useMemo(() => buildHomeCategories(products), [products]);
+  const homeCategories = useMemo(() => buildHomeCategories(categories), [categories]);
+  const categoriesTotal = useMemo(
+    () =>
+      categories.filter(
+        (category) =>
+          category.isActive !== false && category.type !== "entrepreneur",
+      ).length,
+    [categories],
+  );
   const featuredProducts = useMemo(() => {
     const featured = products.filter((product) => product.isFeatured);
     return (featured.length > 0 ? featured : products).slice(0, 4);
@@ -519,7 +537,7 @@ export function HomePage() {
         <Impact
           productsTotal={productsTotal}
           entrepreneursTotal={entrepreneursTotal}
-          categoriesTotal={homeCategories.length}
+          categoriesTotal={categoriesTotal}
           citiesTotal={citiesTotal}
         />
         <Categories categories={homeCategories} />
