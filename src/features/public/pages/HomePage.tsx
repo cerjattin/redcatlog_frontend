@@ -53,6 +53,72 @@ const categoryImages: Record<string, string> = {
   moda: "/home/category-fashion.jpg",
 };
 
+const regionPhotos = [
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.24.jpeg",
+    alt: "Camino rural entre cultivos y montes de la región",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.26.jpeg",
+    alt: "Paisaje de colinas y vegetación de los Montes de María",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.28.jpeg",
+    alt: "Laderas verdes y cielo abierto en zona rural",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.29.jpeg",
+    alt: "Cercas y montañas de una comunidad rural",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.30.jpeg",
+    alt: "Paisaje campesino con montañas y camino destapado",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.32.jpeg",
+    alt: "Carretera rural rodeada de cultivos y colinas",
+  },
+];
+
+const additionalRegionPhotos = [
+  {
+    src: "/gallery/gallery-13.webp",
+    alt: "Atardecer sobre los Montes de Maria",
+  },
+  {
+    src: "/gallery/gallery-14.jpg",
+    alt: "Iglesia rodeada de montanas y vegetacion",
+  },
+  {
+    src: "/gallery/gallery-15.webp",
+    alt: "Puesta de sol sobre montanas y flores",
+  },
+  {
+    src: "/gallery/gallery-16.jpg",
+    alt: "Mirador natural con flores y montanas verdes",
+  },
+  {
+    src: "/gallery/gallery-17.jpeg",
+    alt: "Vista panoramica de un pueblo entre montanas",
+  },
+];
+
+const regionPhotoCollage = [...additionalRegionPhotos, ...regionPhotos];
+
+const regionPhotoLayout = [
+  "lg:left-[2%] lg:top-[8px] lg:h-[132px] lg:w-[214px] lg:-rotate-3",
+  "lg:left-[28%] lg:top-[32px] lg:h-[118px] lg:w-[160px] lg:rotate-2",
+  "lg:left-[47%] lg:top-[4px] lg:h-[138px] lg:w-[230px] lg:rotate-3",
+  "lg:left-[70%] lg:top-[52px] lg:h-[126px] lg:w-[178px] lg:-rotate-2",
+  "lg:left-[7%] lg:top-[142px] lg:h-[112px] lg:w-[196px] lg:rotate-2",
+  "lg:left-[30%] lg:top-[158px] lg:h-[132px] lg:w-[156px] lg:-rotate-3",
+  "lg:left-[48%] lg:top-[144px] lg:h-[108px] lg:w-[198px] lg:rotate-1",
+  "lg:left-[70%] lg:top-[184px] lg:h-[124px] lg:w-[162px] lg:rotate-3",
+  "lg:left-[1%] lg:top-[266px] lg:h-[108px] lg:w-[168px] lg:-rotate-2",
+  "lg:left-[22%] lg:top-[284px] lg:h-[116px] lg:w-[210px] lg:rotate-3",
+  "lg:left-[48%] lg:top-[270px] lg:h-[132px] lg:w-[260px] lg:-rotate-1",
+];
+
 function normalizeSlug(value: string) {
   return value
     .toLowerCase()
@@ -443,6 +509,53 @@ function Story() {
   );
 }
 
+function RegionPhotos() {
+  return (
+    <section className="relative overflow-hidden bg-[linear-gradient(118deg,#fff8fb_0%,#fff_48%,#eef4ff_100%)] py-16 text-[#211734]">
+      <div className="mx-auto max-w-[1224px] px-5 md:px-8 lg:px-0">
+        <div className="grid items-center gap-8 lg:min-h-[430px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
+          <div>
+          <SectionHeading
+            title="Territorios que inspiran"
+            subtitle="Fotografías representativas de las regiones donde nacen las historias, saberes y emprendimientos de nuestra red."
+          />
+
+          <p className="mt-6 text-center text-lg leading-[1.55] text-[#6d6383] md:text-2xl lg:text-left">
+            Cada paisaje habla del origen de nuestras emprendedoras: caminos,
+            montes, cultivos y comunidades que sostienen su creatividad.
+          </p>
+        </div>
+
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:relative lg:mx-0 lg:block lg:h-[380px] lg:overflow-visible lg:px-0 lg:pb-0">
+          {regionPhotoCollage.map((photo, index) => (
+            <figure
+              key={photo.src}
+              className={[
+                "group relative h-[142px] w-[188px] shrink-0 overflow-hidden rounded-[20px] bg-white shadow-[0_12px_30px_rgba(58,36,103,0.14)] transition duration-300 hover:z-20 hover:-translate-y-2 hover:rotate-0 lg:absolute",
+                regionPhotoLayout[index] ?? "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#211734]/15 via-transparent to-transparent opacity-60" />
+            </figure>
+          ))}
+          </div>
+        </div>
+      </div>
+
+      <span className="pointer-events-none absolute left-8 top-24 h-8 w-8 rounded-full bg-[#fbab8e]/40" />
+      <span className="pointer-events-none absolute right-12 top-32 h-12 w-12 rounded-full bg-[#d66eff]/20" />
+    </section>
+  );
+}
+
 function CallToAction() {
   return (
     <section className="bg-[linear-gradient(102deg,#ffe3e3_3%,#fffcfc_49%,#f2e3ff_101%)] px-5 py-20 md:px-8">
@@ -586,6 +699,7 @@ export function HomePage() {
         <Categories categories={homeCategories} />
         <Products products={featuredProducts} isLoading={isLoading} />
         <Story />
+        <RegionPhotos />
         <CallToAction />
       </main>
     </PublicLayout>
