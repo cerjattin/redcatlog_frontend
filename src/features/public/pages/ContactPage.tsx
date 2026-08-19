@@ -8,7 +8,7 @@ import { PublicFooter, PublicHeader } from "@/features/public/components/PublicL
 const contactDetails = [
   {
     title: "Email",
-    value: "info@mujeresemprendedoras.co",
+    value: "info@redmuemma.com",
     icon: Mail,
   },
   {

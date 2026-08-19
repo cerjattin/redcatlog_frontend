@@ -55,27 +55,27 @@ const categoryImages: Record<string, string> = {
 
 const regionPhotos = [
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.24.jpeg",
+    src: "/gallery/gallery-36.jpeg",
     alt: "Camino rural entre cultivos y montes de la región",
   },
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.26.jpeg",
+    src: "/gallery/gallery-37.jpeg",
     alt: "Paisaje de colinas y vegetación de los Montes de María",
   },
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.28.jpeg",
+    src: "/gallery/gallery-38.jpeg",
     alt: "Laderas verdes y cielo abierto en zona rural",
   },
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.29.jpeg",
+    src: "/gallery/gallery-39.jpeg",
     alt: "Cercas y montañas de una comunidad rural",
   },
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.30.jpeg",
+    src: "/gallery/gallery-40.jpeg",
     alt: "Paisaje campesino con montañas y camino destapado",
   },
   {
-    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.32.jpeg",
+    src: "/gallery/gallery-41.jpeg",
     alt: "Carretera rural rodeada de cultivos y colinas",
   },
 ];

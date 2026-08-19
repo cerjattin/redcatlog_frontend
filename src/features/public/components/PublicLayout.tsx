@@ -21,6 +21,16 @@ const navItems = [
 
 const brandName = "RED MUEMMA Mujeres Emprendedoras de los Montes de Maria";
 
+const partnerEntities = [
+  { name: "ICETEX", logo: "/logos/ICETEX.png" },
+  { name: "Universidad Libre seccional Barranquilla", logo: "/logos/Ulibre.webp" },
+  { name: "Corporacion Universitaria Reformada - UNIREFORMADA", logo: "/logos/Unireformada.jpeg" },
+  { name: "Universidad Nacional de Trujillo", logo: "/logos/trujillo.png" },
+  { name: "Universidad Autonoma de Sinaloa", logo: "/logos/Sinaloa.jpg" },
+  { name: "Alcaldia Municipal de El Guamo", logo: "/logos/guamo.webp" },
+  { name: "Alcaldia Municipal de San Jacinto", logo: "/logos/SAN_JACINTO.png" },
+] as const;
+
 export function Instagram({ size = 20 }: { size?: number }) {
   return (
     <span style={{ fontSize: size }} aria-hidden="true">
@@ -157,8 +167,24 @@ export function PublicFooter() {
           />
           <FooterLinks
             title="Contacto"
-            items={["info@mujeresemprendedoras", "+57 300 000 0000"]}
+            items={["info@redmuemma.com"]}
           />
+          <div className="col-span-2 flex items-center justify-start gap-2 sm:col-span-3 sm:justify-end">
+            {partnerEntities.map((entity) => (
+              <span
+                key={entity.name}
+                title={entity.name}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white p-1.5 shadow-[0_8px_20px_rgba(58,36,103,0.08)]"
+              >
+                <img
+                  src={entity.logo}
+                  alt={entity.name}
+                  className="max-h-full max-w-full object-contain"
+                  loading="lazy"
+                />
+              </span>
+            ))}
+          </div>
         </div>
       </div>
       <div className="mx-auto max-w-[1224px] border-t border-[#eee7f3] px-5 py-6 text-sm text-[#6d6383] lg:px-0">

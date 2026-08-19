@@ -139,6 +139,48 @@ function WhoWeAre() {
   );
 }
 
+function ResearchProjectSection() {
+  return (
+    <section className="relative overflow-hidden bg-white px-5 py-16 md:py-[72px]">
+      <div className="pointer-events-none absolute right-[-72px] top-10 h-36 w-36 rounded-full bg-[#ff88ac]/20" />
+      <div className="pointer-events-none absolute bottom-[-64px] left-[-56px] h-40 w-40 rounded-full border-[22px] border-[#d66eff]/20" />
+
+      <div className="relative z-10 mx-auto grid max-w-[1224px] items-center gap-10 lg:grid-cols-[1fr_420px] lg:gap-14">
+        <div className="rounded-[32px] bg-[linear-gradient(135deg,#fff4f0_0%,#fff_52%,#f7edff_100%)] p-7 shadow-[0_20px_60px_rgba(58,36,103,0.08)] md:p-10">
+          <span className="inline-flex rounded-full bg-[#7044c9]/10 px-4 py-2 text-sm font-semibold text-[#7044c9]">
+            Proyecto de investigación
+          </span>
+          <h2 className="mt-5 text-[28px] font-bold leading-[1.1] text-[#211734] md:text-[34px]">
+            Cooperación, empoderamiento y restitución de tierras
+          </h2>
+          <p className="mt-6 text-base leading-[1.65] text-[#6d6383] md:text-lg">
+            Esta página web es resultado del proyecto de investigación denominado:
+            “Estrategia de cooperación internacional a mujeres víctimas del
+            conflicto armado en dos municipios de la zona de los Montes de María
+            en Colombia desde la perspectiva del derecho fundamental a la
+            restitución de tierras a través de una red de empoderamiento” y
+            financiado en el marco de la convocatoria ICETEX Expertos
+            Internacionales 2025. Fue ejecutado por la Universidad Libre seccional
+            Barranquilla durante el año 2026, en alianza con: Corporación
+            Universitaria Reformada (CUR) - UNIREFORMADA, Universidad Nacional de
+            Trujillo (UNT), Universidad Autónoma de Sinaloa (UAS) y las Alcaldías
+            Municipales de El Guamo y San Jacinto.
+          </p>
+        </div>
+
+        <div className="relative mx-auto h-[320px] w-full max-w-[420px] overflow-hidden rounded-[30px] shadow-[0_24px_45px_rgba(13,33,91,0.18)] md:h-[420px]">
+          <img
+            src="/gallery/gallery-02.jpeg"
+            alt="Proceso artesanal de mujeres emprendedoras"
+            className="h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#3a2467]/45 via-transparent to-transparent" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ValuesSection() {
   return (
     <section className="relative overflow-hidden bg-[#fff4f0] px-5 py-[72px]">
@@ -316,6 +358,7 @@ export function AboutPage() {
       <main>
         <HeroAbout />
         <WhoWeAre />
+        <ResearchProjectSection />
         <ValuesSection />
         <MissionVision />
         <ImpactSection />
