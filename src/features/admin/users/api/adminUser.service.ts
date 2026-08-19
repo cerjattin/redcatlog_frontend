@@ -4,6 +4,7 @@ import type {
   AdminUser,
   AdminUsersListQuery,
   AdminUsersListResponse,
+  CreateAdminUserPayload,
   UpdateUserStatusPayload,
 } from "@/features/admin/users/types/adminUser.types";
 
@@ -90,6 +91,12 @@ export const adminUserService = {
 
   async getUserById(id: string): Promise<AdminUser> {
     const response = await api.get<unknown>(`/users/${id}`);
+
+    return normalizeUserResponse(response.data);
+  },
+
+  async createUser(payload: CreateAdminUserPayload): Promise<AdminUser> {
+    const response = await api.post<unknown>("/users", payload);
 
     return normalizeUserResponse(response.data);
   },

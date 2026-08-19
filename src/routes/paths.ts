@@ -23,6 +23,7 @@ export const paths = {
     dashboard: "/admin",
 
     users: "/admin/users",
+    newUser: "/admin/users/new",
     userDetail: "/admin/users/:id",
 
     entrepreneurs: "/admin/entrepreneurs",

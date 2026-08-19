@@ -24,6 +24,8 @@ Si un usuario intenta entrar a una ruta no autorizada, el sistema lo redirige a 
 4. Si el usuario debe cambiar contrasena, el sistema lo redirige a `Cambiar contrasena`.
 5. Segun el rol, el sistema habilita el panel correspondiente.
 
+Nota: el registro publico de usuarios no se usa en este flujo operativo. Las cuentas deben ser creadas desde el panel administrador.
+
 ## 4. Dashboard administrador
 
 Ruta: `/admin`
@@ -52,6 +54,8 @@ Ruta: `/admin/users`
 
 Este modulo permite consultar usuarios registrados y controlar su acceso.
 
+Tambien permite crear usuarios internos, especialmente cuentas con rol `Editor` para apoyar la administracion del contenido del sitio.
+
 ### 5.1 Filtros disponibles
 
 - Busqueda por nombre, correo, ciudad o telefono.
@@ -75,7 +79,41 @@ Para cada usuario se puede:
 - Inactivar.
 - Bloquear.
 
-### 5.3 Detalle de usuario
+Desde el encabezado del modulo se puede seleccionar `Nuevo usuario` para crear una cuenta desde administracion.
+
+### 5.3 Crear usuario
+
+Ruta: `/admin/users/new`
+
+El administrador puede crear usuarios con los siguientes roles:
+
+- Editor.
+- Administrador.
+- Emprendedora.
+
+Campos principales:
+
+- Nombres.
+- Apellidos.
+- Correo electronico.
+- Contrasena temporal.
+- Rol.
+- Estado inicial.
+- Telefono.
+- WhatsApp.
+- Ciudad.
+- Departamento.
+- Pais.
+
+Configuracion recomendada:
+
+1. Para apoyo administrativo, usar rol `Editor`.
+2. Dejar estado inicial como `Activo` si la cuenta ya debe poder ingresar.
+3. Mantener activa la opcion `Solicitar cambio de contrasena al iniciar sesion`.
+4. Entregar la contrasena temporal por un canal seguro.
+5. Pedir al usuario que cambie su contrasena en el primer ingreso.
+
+### 5.4 Detalle de usuario
 
 Ruta: `/admin/users/:id`
 

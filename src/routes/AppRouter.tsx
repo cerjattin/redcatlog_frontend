@@ -16,12 +16,12 @@ import { AdminProductDetailPage } from "@/features/admin/products/pages/AdminPro
 import { PublicEntrepreneurDetailPage } from "@/features/public/pages/PublicEntrepreneurDetailPage";
 import { PublicProductDetailPage } from "@/features/public/pages/PublicProductDetailPage";
 import { AdminProductsPage } from "@/features/admin/products/pages/AdminProductsPage";
+import { AdminUserFormPage } from "@/features/admin/users/pages/AdminUserFormPage";
 import { AdminUserDetailPage } from "@/features/admin/users/pages/AdminUserDetailPage";
 import { AdminUsersPage } from "@/features/admin/users/pages/AdminUsersPage";
 import { ChangePasswordPage } from "@/features/auth/pages/ChangePasswordPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
-import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { UnauthorizedPage } from "@/features/auth/pages/UnauthorizedPage";
 import { EditorDashboardPage } from "@/features/editor/pages/EditorDashboardPage";
@@ -73,7 +73,7 @@ const router = createBrowserRouter([
   },
   {
     path: paths.public.register,
-    element: <RegisterPage />,
+    element: <Navigate to={paths.public.login} replace />,
   },
   {
     path: paths.public.productDetail,
@@ -129,6 +129,10 @@ const router = createBrowserRouter([
               {
                 path: paths.admin.users,
                 element: <AdminUsersPage />,
+              },
+              {
+                path: paths.admin.newUser,
+                element: <AdminUserFormPage />,
               },
               {
                 path: paths.admin.userDetail,

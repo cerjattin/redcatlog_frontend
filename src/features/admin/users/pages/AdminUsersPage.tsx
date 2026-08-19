@@ -1,4 +1,12 @@
-import { Ban, Eye, Search, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import {
+  Ban,
+  Eye,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  UserPlus,
+  UserX,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -48,6 +56,7 @@ function getStatusVariant(status: string) {
 function getRoleLabel(role?: string | null) {
   const labels: Record<string, string> = {
     admin: "Administrador",
+    editor: "Editor",
     super_admin: "Super administrador",
     entrepreneur: "Emprendedora",
   };
@@ -144,6 +153,12 @@ export function AdminUsersPage() {
         eyebrow="Administración"
         title="Gestión de usuarios"
         description="Consulta usuarios, revisa sus roles y controla el estado de acceso a la plataforma."
+        actions={
+          <Button onClick={() => navigate(paths.admin.newUser)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Nuevo usuario
+          </Button>
+        }
       />
 
       <Card className="mb-5">
@@ -180,6 +195,7 @@ export function AdminUsersPage() {
           >
             <option value="">Todos los roles</option>
             <option value="admin">Administrador</option>
+            <option value="editor">Editor</option>
             <option value="super_admin">Super administrador</option>
             <option value="entrepreneur">Emprendedora</option>
           </select>

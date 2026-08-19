@@ -65,3 +65,20 @@ export type AdminUsersListResponse = {
 export type UpdateUserStatusPayload = {
   status: UserStatus;
 };
+
+export type AdminCreatableUserRole = "admin" | "editor" | "entrepreneur";
+
+export type CreateAdminUserPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: AdminCreatableUserRole;
+  status?: UserStatus;
+  phone?: string | null;
+  whatsapp?: string | null;
+  city?: string | null;
+  department?: string | null;
+  country?: string | null;
+  forcePasswordChange?: boolean;
+};

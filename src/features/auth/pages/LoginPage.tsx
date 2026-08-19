@@ -156,16 +156,6 @@ export function LoginPage() {
               Ingresar
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-ink-500">
-            ¿Aún no tienes cuenta?{" "}
-            <Link
-              to={paths.public.register}
-              className="font-semibold text-primary-600 hover:text-primary-700"
-            >
-              Registrar emprendedora
-            </Link>
-          </p>
         </section>
       </div>
     </main>

@@ -56,6 +56,7 @@ function getStatusVariant(status: string) {
 function getRoleLabel(role?: string | null) {
   const labels: Record<string, string> = {
     admin: "Administrador",
+    editor: "Editor",
     super_admin: "Super administrador",
     entrepreneur: "Emprendedora",
   };
