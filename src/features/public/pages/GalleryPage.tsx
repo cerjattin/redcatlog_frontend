@@ -94,6 +94,7 @@ const territoryItems: GalleryItem[] = territoryPhotos.map((photo, index) => ({
 }));
 
 const allGalleryItems = [...galleryColumns.flat(), ...territoryItems];
+const territoryPhotoLayout: string[] = [];
 
 function GalleryHero() {
   return (
@@ -167,6 +168,10 @@ function GalleryCard({ item, responsive = false }: { item: GalleryItem; responsi
 }
 
 function TerritoryTribute() {
+  if (territoryPhotoLayout.length === 0) {
+    return null;
+  }
+
   return (
     <section className="mx-auto max-w-[1224px] px-5 pt-12 lg:px-0">
       <div className="overflow-hidden rounded-[36px] bg-white/78 px-5 py-10 shadow-[0_18px_60px_rgba(58,36,103,0.1)] md:px-8 lg:px-10">
@@ -212,8 +217,7 @@ function TerritoryTribute() {
 }
 
 function GalleryGrid({ items }: { items: GalleryItem[] }) {
-  const itemIds = new Set(items.map((item) => item.id));
-  const filteredColumns = galleryColumns.map((column) => column.filter((item) => itemIds.has(item.id)));
+  const filteredColumns = [0, 1, 2].map((columnIndex) => items.filter((_, itemIndex) => itemIndex % 3 === columnIndex));
 
   return (
     <section className="mx-auto max-w-[1224px] px-5 pt-8 lg:px-0">
@@ -241,9 +245,10 @@ export function GalleryPage() {
       Fotos: "photo",
       Videos: "video",
       Historias: "story",
+      Territorios: "territory",
     };
 
-    return galleryColumns.flat().filter((item) => {
+    return allGalleryItems.filter((item) => {
       const matchesFilter = filter === "Todo" || item.kind === filterKind[filter];
       const matchesQuery = !normalizedQuery || item.alt.toLocaleLowerCase("es").includes(normalizedQuery);
       return matchesFilter && matchesQuery;
