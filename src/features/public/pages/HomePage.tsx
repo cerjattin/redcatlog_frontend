@@ -106,17 +106,17 @@ const additionalRegionPhotos = [
 const regionPhotoCollage = [...additionalRegionPhotos, ...regionPhotos];
 
 const regionPhotoLayout = [
-  "lg:left-[2%] lg:top-[8px] lg:h-[132px] lg:w-[214px] lg:-rotate-3",
-  "lg:left-[28%] lg:top-[32px] lg:h-[118px] lg:w-[160px] lg:rotate-2",
-  "lg:left-[47%] lg:top-[4px] lg:h-[138px] lg:w-[230px] lg:rotate-3",
-  "lg:left-[70%] lg:top-[52px] lg:h-[126px] lg:w-[178px] lg:-rotate-2",
-  "lg:left-[7%] lg:top-[142px] lg:h-[112px] lg:w-[196px] lg:rotate-2",
-  "lg:left-[30%] lg:top-[158px] lg:h-[132px] lg:w-[156px] lg:-rotate-3",
-  "lg:left-[48%] lg:top-[144px] lg:h-[108px] lg:w-[198px] lg:rotate-1",
-  "lg:left-[70%] lg:top-[184px] lg:h-[124px] lg:w-[162px] lg:rotate-3",
-  "lg:left-[1%] lg:top-[266px] lg:h-[108px] lg:w-[168px] lg:-rotate-2",
-  "lg:left-[22%] lg:top-[284px] lg:h-[116px] lg:w-[210px] lg:rotate-3",
-  "lg:left-[48%] lg:top-[270px] lg:h-[132px] lg:w-[260px] lg:-rotate-1",
+  "lg:left-[2%] lg:top-[8px] lg:h-[126px] lg:w-[206px] lg:-rotate-3",
+  "lg:left-[25%] lg:top-[28px] lg:h-[112px] lg:w-[154px] lg:rotate-2",
+  "lg:left-[42%] lg:top-[0px] lg:h-[132px] lg:w-[220px] lg:rotate-3",
+  "lg:left-[63%] lg:top-[44px] lg:h-[118px] lg:w-[172px] lg:-rotate-2",
+  "lg:left-[8%] lg:top-[120px] lg:h-[108px] lg:w-[188px] lg:rotate-2",
+  "lg:left-[29%] lg:top-[134px] lg:h-[122px] lg:w-[150px] lg:-rotate-3",
+  "lg:left-[45%] lg:top-[120px] lg:h-[104px] lg:w-[190px] lg:rotate-1",
+  "lg:left-[64%] lg:top-[160px] lg:h-[116px] lg:w-[156px] lg:rotate-3",
+  "lg:left-[3%] lg:top-[230px] lg:h-[102px] lg:w-[162px] lg:-rotate-2",
+  "lg:left-[21%] lg:top-[244px] lg:h-[110px] lg:w-[200px] lg:rotate-3",
+  "lg:left-[43%] lg:top-[232px] lg:h-[122px] lg:w-[248px] lg:-rotate-1",
 ];
 
 function normalizeSlug(value: string) {
@@ -511,9 +511,9 @@ function Story() {
 
 function RegionPhotos() {
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(118deg,#fff8fb_0%,#fff_48%,#eef4ff_100%)] py-16 text-[#211734]">
+    <section className="relative overflow-hidden bg-[linear-gradient(118deg,#fff8fb_0%,#fff_48%,#eef4ff_100%)] py-14 text-[#211734]">
       <div className="mx-auto max-w-[1224px] px-5 md:px-8 lg:px-0">
-        <div className="grid items-center gap-8 lg:min-h-[430px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
+        <div className="grid items-center gap-8 lg:min-h-[380px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
           <div>
           <SectionHeading
             title="Territorios que inspiran"
@@ -526,7 +526,7 @@ function RegionPhotos() {
           </p>
         </div>
 
-          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:relative lg:mx-0 lg:block lg:h-[380px] lg:overflow-visible lg:px-0 lg:pb-0">
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:relative lg:mx-0 lg:block lg:h-[350px] lg:overflow-visible lg:px-0 lg:pb-0">
           {regionPhotoCollage.map((photo, index) => (
             <figure
               key={photo.src}

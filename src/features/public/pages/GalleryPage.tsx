@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { PublicFooter, PublicHeader } from "@/features/public/components/PublicLayout";
 import { cn } from "@/utils/cn";
 
-type GalleryFilter = "Todo" | "Fotos" | "Videos" | "Historias";
-type GalleryKind = "photo" | "video" | "story";
+type GalleryFilter = "Todo" | "Fotos" | "Videos" | "Historias" | "Territorios";
+type GalleryKind = "photo" | "video" | "story" | "territory";
 
 type GalleryItem = {
   id: number;
@@ -36,7 +36,64 @@ const galleryColumns: GalleryItem[][] = [
   ],
 ];
 
-const filters: GalleryFilter[] = ["Todo", "Fotos", "Videos", "Historias"];
+const filters: GalleryFilter[] = ["Todo", "Fotos", "Videos", "Historias", "Territorios"];
+
+const territoryPhotos = [
+  {
+    src: "/gallery/gallery-13.webp",
+    alt: "Atardecer sobre los Montes de Maria",
+  },
+  {
+    src: "/gallery/gallery-14.jpg",
+    alt: "Iglesia rodeada de montanas y vegetacion",
+  },
+  {
+    src: "/gallery/gallery-15.webp",
+    alt: "Puesta de sol sobre montanas y flores",
+  },
+  {
+    src: "/gallery/gallery-16.jpg",
+    alt: "Mirador natural con flores y montanas verdes",
+  },
+  {
+    src: "/gallery/gallery-17.jpeg",
+    alt: "Vista panoramica de un pueblo entre montanas",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.24.jpeg",
+    alt: "Camino rural entre cultivos y montes de la region",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.26.jpeg",
+    alt: "Paisaje de colinas y vegetacion de los Montes de Maria",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.28.jpeg",
+    alt: "Laderas verdes y cielo abierto en zona rural",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.29.jpeg",
+    alt: "Cercas y montanas de una comunidad rural",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.30.jpeg",
+    alt: "Paisaje campesino con montanas y camino destapado",
+  },
+  {
+    src: "/gallery/WhatsApp%20Image%202026-07-31%20at%2017.22.32.jpeg",
+    alt: "Carretera rural rodeada de cultivos y colinas",
+  },
+];
+
+const territoryItems: GalleryItem[] = territoryPhotos.map((photo, index) => ({
+  id: 13 + index,
+  image: photo.src,
+  alt: photo.alt,
+  kind: "territory",
+  height: [360, 432, 314, 432, 314, 520, 490, 520, 490, 432, 432][index] ?? 432,
+}));
+
+const allGalleryItems = [...galleryColumns.flat(), ...territoryItems];
 
 function GalleryHero() {
   return (
@@ -109,6 +166,51 @@ function GalleryCard({ item, responsive = false }: { item: GalleryItem; responsi
   );
 }
 
+function TerritoryTribute() {
+  return (
+    <section className="mx-auto max-w-[1224px] px-5 pt-12 lg:px-0">
+      <div className="overflow-hidden rounded-[36px] bg-white/78 px-5 py-10 shadow-[0_18px_60px_rgba(58,36,103,0.1)] md:px-8 lg:px-10">
+        <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <span className="inline-flex rounded-full bg-[#d66eff]/15 px-4 py-2 text-sm font-semibold text-[#7044c9]">
+              Homenaje a los territorios
+            </span>
+            <h2 className="mt-5 text-3xl font-bold leading-[1.1] text-[#211734] md:text-[40px]">
+              Los paisajes que también cuentan nuestra historia
+            </h2>
+            <p className="mt-5 text-lg leading-[1.55] text-[#6d6383] md:text-2xl">
+              Montes, caminos, pueblos y miradores que acompañan el origen de
+              las emprendedoras de la red.
+            </p>
+          </div>
+
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:relative lg:mx-0 lg:block lg:h-[390px] lg:overflow-visible lg:px-0 lg:pb-0">
+            {territoryPhotos.map((photo, index) => (
+              <figure
+                key={photo.src}
+                className={[
+                  "group relative h-[142px] w-[188px] shrink-0 overflow-hidden rounded-[20px] bg-white shadow-[0_12px_30px_rgba(58,36,103,0.14)] transition duration-300 hover:z-20 hover:-translate-y-2 hover:rotate-0 lg:absolute",
+                  territoryPhotoLayout[index] ?? "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#211734]/15 via-transparent to-transparent opacity-60" />
+              </figure>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function GalleryGrid({ items }: { items: GalleryItem[] }) {
   const itemIds = new Set(items.map((item) => item.id));
   const filteredColumns = galleryColumns.map((column) => column.filter((item) => itemIds.has(item.id)));
@@ -154,6 +256,7 @@ export function GalleryPage() {
       <main className="relative overflow-hidden bg-[linear-gradient(134deg,#ffe9f0_0%,#fff_48%,#ffe8df_100%)] pb-20">
         <GalleryHero />
         <GalleryControls query={query} filter={filter} onQueryChange={setQuery} onFilterChange={setFilter} />
+        <TerritoryTribute />
         {visibleItems.length > 0 ? (
           <GalleryGrid items={visibleItems} />
         ) : (

@@ -61,38 +61,24 @@ export function LoginPage() {
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="hidden lg:block">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-primary-600">
-            Red Mujeres
+            Red Mujeres de Los Montes de Maria
           </p>
 
           <h1 className="mt-4 max-w-xl text-5xl font-bold leading-tight text-ink-900">
-            Plataforma privada para gestionar historias, productos y
-            emprendimientos.
+            Panel de administración y gestión de emprendimientos productos
+            categorizados.
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-7 text-ink-500">
-            Ingresa al panel Beta para administrar perfiles, catálogos,
+            Ingresa al panel V1.0 para administrar perfiles, catálogos,
             aprobaciones e información de emprendedoras.
           </p>
 
           <div className="mt-8 grid max-w-xl gap-4 sm:grid-cols-3">
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <strong className="block text-2xl text-ink-900">Beta</strong>
+              <strong className="block text-2xl text-ink-900">V1.0</strong>
               <span className="mt-1 block text-sm text-ink-500">
                 Versión inicial
-              </span>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <strong className="block text-2xl text-ink-900">JWT</strong>
-              <span className="mt-1 block text-sm text-ink-500">
-                Sesión segura
-              </span>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <strong className="block text-2xl text-ink-900">Roles</strong>
-              <span className="mt-1 block text-sm text-ink-500">
-                Admin y emprendedora
               </span>
             </div>
           </div>
