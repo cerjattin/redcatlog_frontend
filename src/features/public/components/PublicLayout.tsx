@@ -167,7 +167,7 @@ export function PublicFooter() {
           />
           <FooterLinks
             title="Contacto"
-            items={["info@redmuemma.com"]}
+            items={["info@redmuemma.com", "+57 3007928195"]}
           />
           <div className="col-span-2 flex items-center justify-start gap-2 sm:col-span-3 sm:justify-end">
             {partnerEntities.map((entity) => (

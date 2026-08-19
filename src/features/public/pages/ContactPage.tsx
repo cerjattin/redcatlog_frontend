@@ -13,7 +13,7 @@ const contactDetails = [
   },
   {
     title: "Teléfono",
-    value: "+57 300 123 4567",
+    value: "+57 3007928195",
     icon: Phone,
   },
 ] as const;
