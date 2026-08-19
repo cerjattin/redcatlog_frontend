@@ -8,7 +8,10 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { PublicFooter, PublicHeader } from "@/features/public/components/PublicLayout";
+import {
+  PublicFooter,
+  PublicHeader,
+} from "@/features/public/components/PublicLayout";
 
 const values = [
   {
@@ -47,26 +50,26 @@ const values = [
 
 const impactStats = [
   {
-    value: "250+",
+    value: "40",
     label: "Mujeres emprendedoras",
     icon: UsersRound,
     bg: "bg-[#ff88ac]",
   },
   {
-    value: "1200+",
+    value: "100+",
     label: "Productos únicos",
     icon: Package,
     bg: "bg-[#a0b8fb]",
   },
   {
-    value: "180",
+    value: "40",
     label: "Emprendimientos",
     icon: Heart,
     bg: "bg-[#fbab8e]",
   },
   {
-    value: "15+",
-    label: "Ciudades",
+    value: "2",
+    label: "Municipios",
     icon: MapPin,
     bg: "bg-[#d66eff]",
   },
@@ -190,7 +193,10 @@ function MissionVision() {
 
       <div className="relative z-10 mx-auto grid max-w-[1224px] gap-16">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-[72px]">
-          <ImageCard src="/about/mission-table.jpg" alt="Mujeres trabajando en un taller artesanal" />
+          <ImageCard
+            src="/about/mission-table.jpg"
+            alt="Mujeres trabajando en un taller artesanal"
+          />
           <div>
             <h2 className="text-[34px] font-bold leading-[1.1] text-[#fbab8e] md:text-[40px]">
               Nuestra Misión
@@ -250,7 +256,9 @@ function ImageCard({
   className?: string;
 }) {
   return (
-    <div className={`relative h-[330px] overflow-hidden rounded-[24px] md:h-[396px] ${className}`}>
+    <div
+      className={`relative h-[330px] overflow-hidden rounded-[24px] md:h-[396px] ${className}`}
+    >
       <img src={src} alt={alt} className="h-full w-full object-cover" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#ff88ac]/55 to-transparent" />
     </div>
@@ -316,4 +324,3 @@ export function AboutPage() {
     </div>
   );
 }
-
