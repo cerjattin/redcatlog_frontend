@@ -52,7 +52,7 @@ function getCategoryCatalogPath(entrepreneur: PublicBusiness) {
 }
 
 export function PublicEntrepreneurDetailPage() {
-  const params = useParams<{ slug: string }>();
+  const params = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [entrepreneur, setEntrepreneur] = useState<PublicBusiness | null>(null);
@@ -67,7 +67,7 @@ export function PublicEntrepreneurDetailPage() {
 
   useEffect(() => {
     async function loadEntrepreneur() {
-      if (!params.slug) {
+      if (!params.id) {
         setLoadError("No se encontró la emprendedora solicitada.");
         setIsLoading(false);
         return;
@@ -77,7 +77,7 @@ export function PublicEntrepreneurDetailPage() {
         setIsLoading(true);
         setLoadError(null);
 
-        const data = await publicBusinessService.getBusinessBySlug(params.slug);
+        const data = await publicBusinessService.getEntrepreneurById(params.id);
 
         setEntrepreneur(data);
       } catch {
@@ -88,7 +88,7 @@ export function PublicEntrepreneurDetailPage() {
     }
 
     void loadEntrepreneur();
-  }, [params.slug]);
+  }, [params.id]);
 
   useEffect(() => {
     if (!entrepreneur?.id) {
@@ -385,17 +385,22 @@ export function PublicEntrepreneurDetailPage() {
             ) : null}
 
             {areProductsLoading ? (
-              <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, index) => (
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => (
                   <PublicProductCardSkeleton
                     key={`entrepreneur-product-skeleton-${index}`}
+                    variant="compact"
                   />
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {products.map((product) => (
-                  <PublicProductCard key={product.id} product={product} />
+                  <PublicProductCard
+                    key={product.id}
+                    product={product}
+                    variant="compact"
+                  />
                 ))}
               </div>
             ) : !productsError ? (

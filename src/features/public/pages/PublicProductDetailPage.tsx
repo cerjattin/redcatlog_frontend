@@ -30,13 +30,13 @@ import { paths } from "@/routes/paths";
 import { buildImageUrl } from "@/utils/image";
 
 function getEntrepreneurDetailPath(product: PublicProduct) {
-  const slug = product.entrepreneur?.slug;
+  const entrepreneurId = product.entrepreneur?.id;
 
-  if (!slug) {
+  if (!entrepreneurId) {
     return paths.public.entrepreneurs;
   }
 
-  return paths.public.entrepreneurDetail.replace(":slug", slug);
+  return paths.public.entrepreneurDetail.replace(":id", entrepreneurId);
 }
 
 function getCategoryHref(product: PublicProduct) {

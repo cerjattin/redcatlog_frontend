@@ -64,12 +64,8 @@ function getApiErrorMessage(error: unknown) {
   return "No fue posible cargar los emprendimientos.";
 }
 
-function getPublicEntrepreneurDetailPath(slug?: string | null) {
-  if (!slug) {
-    return paths.public.entrepreneurs;
-  }
-
-  return paths.public.entrepreneurDetail.replace(":slug", slug);
+function getPublicEntrepreneurDetailPath(id: string) {
+  return paths.public.entrepreneurDetail.replace(":id", id);
 }
 
 function EntrepreneursHero() {
@@ -206,7 +202,7 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
         </div>
 
         <Link
-          to={getPublicEntrepreneurDetailPath(business.slug)}
+          to={getPublicEntrepreneurDetailPath(business.id)}
           className="block text-2xl font-bold text-[#211734] transition hover:text-[#7b3fe4]"
         >
           {business.fullName ||
@@ -244,25 +240,18 @@ function BusinessCard({ business }: { business: PublicBusiness }) {
 
         <BusinessSocialLinks business={business} />
 
-        <Link
-          to={getPublicEntrepreneurDetailPath(business.slug)}
-          className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[#7b3fe4] px-5 py-3 text-sm font-bold text-[#7b3fe4] transition hover:bg-[#7b3fe4] hover:text-white"
-        >
-          Ver perfil y productos
-        </Link>
-
         {whatsappUrl ? (
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35c46a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2ead5c]"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35c46a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2ead5c]"
           >
             <MessageCircle className="h-5 w-5" />
             Contactar por WhatsApp
           </a>
         ) : (
-          <div className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[#6d6383]/15 px-5 py-3 text-sm font-bold text-[#6d6383]">
+          <div className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#6d6383]/15 px-5 py-3 text-sm font-bold text-[#6d6383]">
             Contacto no disponible
           </div>
         )}

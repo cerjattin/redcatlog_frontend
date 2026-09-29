@@ -142,8 +142,8 @@ export const publicBusinessService = {
 
     return normalizePublicEntrepreneursResponse(response.data);
   },
-  async getBusinessBySlug(slug: string): Promise<PublicBusiness> {
-    const response = await api.get<unknown>(`/public/entrepreneurs/${slug}`);
+  async getEntrepreneurById(id: string): Promise<PublicBusiness> {
+    const response = await api.get<unknown>(`/public/entrepreneurs/${id}`);
 
     return normalizePublicEntrepreneurDetailResponse(response.data);
   },
