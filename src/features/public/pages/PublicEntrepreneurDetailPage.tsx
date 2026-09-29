@@ -13,8 +13,18 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { publicBusinessService } from "@/features/public/api/publicBusiness.service";
 import { PublicLayout } from "@/features/public/components/PublicLayout";
+import { PublicPagination } from "@/features/public/components/PublicPagination";
+import {
+  PublicProductCard,
+  PublicProductCardSkeleton,
+} from "@/features/public/components/PublicProductCard";
 import { PublicSocialLinks } from "@/features/public/components/PublicSocialLinks";
+import { publicProductService } from "@/features/public/api/publicProduct.service";
 import type { PublicBusiness } from "@/features/public/types/publicBusiness.types";
+import type {
+  PublicProduct,
+  PublicProductsPagination,
+} from "@/features/public/types/publicProduct.types";
 import {
   buildPublicBusinessWhatsappUrl,
   getPublicBusinessBannerUrl,
@@ -26,7 +36,8 @@ import {
   getPublicBusinessProductsCount,
 } from "@/features/public/utils/businessDisplay";
 import { paths } from "@/routes/paths";
-import { buildImageUrl } from "@/utils/image";
+
+const PRODUCTS_PAGE_SIZE = 6;
 
 function getCatalogByEntrepreneurPath(entrepreneur: PublicBusiness) {
   return `${paths.public.catalog}?entrepreneurId=${entrepreneur.id}`;
@@ -47,6 +58,12 @@ export function PublicEntrepreneurDetailPage() {
   const [entrepreneur, setEntrepreneur] = useState<PublicBusiness | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [products, setProducts] = useState<PublicProduct[]>([]);
+  const [productsPagination, setProductsPagination] =
+    useState<PublicProductsPagination | null>(null);
+  const [productsPage, setProductsPage] = useState(1);
+  const [areProductsLoading, setAreProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadEntrepreneur() {
@@ -72,6 +89,55 @@ export function PublicEntrepreneurDetailPage() {
 
     void loadEntrepreneur();
   }, [params.slug]);
+
+  useEffect(() => {
+    if (!entrepreneur?.id) {
+      return;
+    }
+
+    const entrepreneurId = entrepreneur.id;
+    let isMounted = true;
+
+    async function loadProducts() {
+      try {
+        setAreProductsLoading(true);
+        setProductsError(null);
+
+        const data = await publicProductService.getProducts({
+          entrepreneurId,
+          page: productsPage,
+          limit: PRODUCTS_PAGE_SIZE,
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        setProducts(data.products);
+        setProductsPagination(data.pagination);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setProducts([]);
+        setProductsPagination(null);
+        setProductsError(
+          "No fue posible cargar los productos de esta emprendedora.",
+        );
+      } finally {
+        if (isMounted) {
+          setAreProductsLoading(false);
+        }
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [entrepreneur?.id, productsPage]);
 
   if (isLoading) {
     return (
@@ -116,7 +182,8 @@ export function PublicEntrepreneurDetailPage() {
   const categoryName = getPublicBusinessCategoryName(entrepreneur);
   const location = getPublicBusinessLocation(entrepreneur);
   const whatsappUrl = buildPublicBusinessWhatsappUrl(entrepreneur);
-  const productsCount = getPublicBusinessProductsCount(entrepreneur);
+  const productsCount =
+    productsPagination?.total ?? getPublicBusinessProductsCount(entrepreneur);
 
   return (
     <PublicLayout active="Emprendedoras">
@@ -224,44 +291,6 @@ export function PublicEntrepreneurDetailPage() {
                 </>
               ) : null}
 
-              {entrepreneur.products?.length ? (
-                <>
-                  <h3 className="mt-8 text-xl font-black text-[#211734]">
-                    Productos destacados
-                  </h3>
-
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {entrepreneur.products.map((product) => (
-                      <Link
-                        key={product.id}
-                        to={paths.public.productDetail.replace(
-                          ":slug",
-                          product.slug,
-                        )}
-                        className="overflow-hidden rounded-2xl border border-[#efe8f8] bg-white transition hover:-translate-y-1 hover:shadow-md"
-                      >
-                        {product.mainImageUrl ? (
-                          <img
-                            src={buildImageUrl(product.mainImageUrl) ?? ""}
-                            alt={product.name}
-                            className="h-36 w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-36 items-center justify-center bg-[#f4ecff]">
-                            <ImageOff className="h-6 w-6 text-[#8e80aa]" />
-                          </div>
-                        )}
-
-                        <div className="p-4">
-                          <p className="line-clamp-2 text-sm font-bold text-[#211734]">
-                            {product.name}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              ) : null}
             </article>
 
             <aside className="space-y-6">
@@ -326,6 +355,76 @@ export function PublicEntrepreneurDetailPage() {
               </div>
             </aside>
           </div>
+
+          <section className="mt-10 pb-6" aria-labelledby="entrepreneur-products">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="text-sm font-bold uppercase tracking-[0.18em] text-[#ff8da9]">
+                  Catálogo personal
+                </span>
+                <h2
+                  id="entrepreneur-products"
+                  className="mt-2 text-3xl font-black text-[#211734] md:text-4xl"
+                >
+                  Productos de {name}
+                </h2>
+              </div>
+
+              <Link
+                to={getCatalogByEntrepreneurPath(entrepreneur)}
+                className="text-sm font-bold text-[#7b3fe4] hover:text-[#5f2fbc]"
+              >
+                Ver en el catálogo completo
+              </Link>
+            </div>
+
+            {productsError ? (
+              <div className="mt-6 rounded-2xl bg-[#fff4f4] px-5 py-4 text-sm font-medium text-red-700">
+                {productsError}
+              </div>
+            ) : null}
+
+            {areProductsLoading ? (
+              <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <PublicProductCardSkeleton
+                    key={`entrepreneur-product-skeleton-${index}`}
+                  />
+                ))}
+              </div>
+            ) : products.length > 0 ? (
+              <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <PublicProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : !productsError ? (
+              <div className="mt-7 rounded-[2rem] bg-white px-6 py-14 text-center shadow-[0_18px_50px_rgba(58,36,103,0.06)]">
+                <Package className="mx-auto h-10 w-10 text-[#d7c9e9]" />
+                <p className="mt-4 font-bold text-[#211734]">
+                  Esta emprendedora aún no tiene productos publicados.
+                </p>
+              </div>
+            ) : null}
+
+            <PublicPagination
+              currentPage={productsPagination?.page ?? productsPage}
+              totalPages={productsPagination?.totalPages ?? 1}
+              hasPreviousPage={productsPagination?.hasPreviousPage}
+              hasNextPage={productsPagination?.hasNextPage}
+              onPrevious={() =>
+                setProductsPage((current) => Math.max(current - 1, 1))
+              }
+              onNext={() =>
+                setProductsPage((current) =>
+                  Math.min(
+                    current + 1,
+                    productsPagination?.totalPages ?? current + 1,
+                  ),
+                )
+              }
+            />
+          </section>
         </section>
       </main>
     </PublicLayout>

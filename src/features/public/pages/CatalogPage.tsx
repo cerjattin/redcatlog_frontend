@@ -1,39 +1,28 @@
 import axios from "axios";
 import {
   AlertCircle,
-  MessageCircle,
   Search,
-  ShoppingCart,
   SlidersHorizontal,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
-import { Link } from "react-router-dom";
-
 import { PublicPagination } from "@/features/public/components/PublicPagination";
+import {
+  PublicProductCard,
+  PublicProductCardSkeleton,
+} from "@/features/public/components/PublicProductCard";
 import { publicProductService } from "@/features/public/api/publicProduct.service";
 import {
   PublicFooter,
   PublicHeader,
 } from "@/features/public/components/PublicLayout";
-import { PublicSocialLinks } from "@/features/public/components/PublicSocialLinks";
 import type {
   PublicProduct,
   PublicProductCategory,
   PublicProductsPagination,
 } from "@/features/public/types/publicProduct.types";
-import { buildWhatsappUrl } from "@/features/public/utils/whatsapp";
-import {
-  formatPublicProductPrice,
-  getPublicProductEntrepreneurName,
-  getPublicProductLocation,
-  getPublicProductMainImage,
-  getPublicProductWhatsappPhone,
-  isPublicProductOutOfStock,
-} from "@/features/public/utils/productDisplay";
 import { cn } from "@/utils/cn";
-import { paths } from "@/routes/paths";
 
 const PAGE_SIZE = 12;
 
@@ -78,10 +67,6 @@ function getUniqueCategories(products: PublicProduct[]) {
   return Array.from(categoryMap.values()).sort((a, b) =>
     a.name.localeCompare(b.name, "es"),
   );
-}
-
-function getPublicProductDetailPath(slug: string) {
-  return paths.public.productDetail.replace(":slug", slug);
 }
 
 function CatalogHero() {
@@ -187,114 +172,6 @@ function CatalogControls({
         </button>
       </div>
     </div>
-  );
-}
-
-function ProductCard({ product }: { product: PublicProduct }) {
-  const imageUrl = getPublicProductMainImage(product);
-  const price = formatPublicProductPrice(product);
-  const entrepreneurName = getPublicProductEntrepreneurName(product);
-  const location = getPublicProductLocation(product);
-  const whatsappPhone = getPublicProductWhatsappPhone(product);
-  const whatsappUrl = buildWhatsappUrl({
-    phone: whatsappPhone,
-    productName: product.name,
-    businessName: entrepreneurName,
-  });
-  const isOutOfStock = isPublicProductOutOfStock(product);
-
-  return (
-    <article className="overflow-hidden rounded-[24px] bg-white shadow-[0_18px_50px_rgba(58,36,103,0.08)]">
-      <div className="relative">
-        <img
-          src={imageUrl}
-          alt={product.images?.[0]?.altText ?? product.name}
-          className="h-[240px] w-full object-cover sm:h-[288px]"
-        />
-
-        {product.category?.name ? (
-          <span className="absolute left-5 top-5 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold text-[#3a2467] shadow-sm">
-            {product.category.name}
-          </span>
-        ) : null}
-
-        {isOutOfStock ? (
-          <span className="absolute right-5 top-5 rounded-full bg-[#211734] px-4 py-2 text-xs font-semibold text-white shadow-sm">
-            Agotado
-          </span>
-        ) : null}
-      </div>
-
-      <div className="px-6 pb-8 pt-6">
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#a0b8fb]/20 px-3 py-2 text-sm text-[#698ae5]">
-          <ShoppingCart size={15} />
-          Por {entrepreneurName || "REDMUEMMA"}
-        </span>
-
-        <strong className="mt-4 block text-[28px] font-semibold leading-none text-[#3a2467]">
-          {price}
-        </strong>
-
-        <Link
-          to={getPublicProductDetailPath(product.slug)}
-          className="block text-2xl font-bold text-[#211734] transition hover:text-[#7b3fe4]"
-        >
-          {product.name}
-        </Link>
-
-        {product.shortDescription ? (
-          <p className="mt-3 text-sm leading-6 text-[#6d6383]">
-            {product.shortDescription}
-          </p>
-        ) : null}
-
-        <div className="mt-4 space-y-1 text-sm text-[#8e80aa]">
-          <p>Emprendedora: {entrepreneurName}</p>
-
-          {location ? <p>{location}</p> : null}
-        </div>
-
-        <PublicSocialLinks
-          className="mt-5"
-          itemClassName="h-9 min-w-9 px-0 text-[#6d6383]"
-          facebookUrl={product.entrepreneur?.facebookUrl}
-          instagramUrl={product.entrepreneur?.instagramUrl}
-          tiktokUrl={product.entrepreneur?.tiktokUrl}
-        />
-
-        {whatsappUrl ? (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35c46a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2ead5c]"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Consultar por WhatsApp
-          </a>
-        ) : (
-          <div className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#6d6383]/15 px-5 py-3 text-sm font-bold text-[#6d6383]">
-            Contacto no disponible
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
-
-function ProductCardSkeleton() {
-  return (
-    <article className="overflow-hidden rounded-[24px] bg-white">
-      <div className="h-[240px] animate-pulse bg-[#f3edf7] sm:h-[288px]" />
-
-      <div className="space-y-4 px-6 pb-8 pt-6">
-        <div className="h-9 w-40 animate-pulse rounded-full bg-[#f3edf7]" />
-        <div className="h-8 w-28 animate-pulse rounded-xl bg-[#f3edf7]" />
-        <div className="h-6 w-52 animate-pulse rounded-xl bg-[#f3edf7]" />
-        <div className="h-16 w-full animate-pulse rounded-xl bg-[#f3edf7]" />
-        <div className="h-12 w-full animate-pulse rounded-full bg-[#f3edf7]" />
-      </div>
-    </article>
   );
 }
 
@@ -466,13 +343,13 @@ export function CatalogPage() {
           {isLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <ProductCardSkeleton key={`product-skeleton-${index}`} />
+                <PublicProductCardSkeleton key={`product-skeleton-${index}`} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <PublicProductCard key={product.id} product={product} />
               ))}
             </div>
           ) : (
