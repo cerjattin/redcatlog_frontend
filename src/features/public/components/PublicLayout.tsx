@@ -154,20 +154,31 @@ export function PublicFooter() {
           <FooterLinks
             title="Enlaces"
             items={[
-              "Inicio",
-              "Sobre nosotros",
-              "Emprendedoras",
-              "Catálogo",
-              "Galería",
+              { label: "Inicio", href: paths.public.home },
+              { label: "Sobre nosotros", href: paths.public.about },
+              { label: "Emprendedoras", href: paths.public.entrepreneurs },
+              { label: "Catálogo", href: paths.public.catalog },
+              { label: "Galería", href: paths.public.gallery },
             ]}
           />
           <FooterLinks
             title="Categorías"
-            items={["Artesanías", "Gastronomía", "Belleza", "Moda"]}
+            items={[
+              { label: "Artesanías", href: paths.public.catalog },
+              { label: "Gastronomía", href: paths.public.catalog },
+              { label: "Belleza", href: paths.public.catalog },
+              { label: "Moda", href: paths.public.catalog },
+            ]}
           />
           <FooterLinks
             title="Contacto"
-            items={["info@redmuemma.com", "+57 3007928195"]}
+            items={[
+              {
+                label: "info@redmuemma.com",
+                href: "mailto:info@redmuemma.com",
+              },
+              { label: "+57 3007928195", href: "tel:+573007928195" },
+            ]}
           />
           <div className="col-span-2 flex items-center justify-start gap-2 sm:col-span-3 sm:justify-end">
             {partnerEntities.map((entity) => (
@@ -194,16 +205,33 @@ export function PublicFooter() {
   );
 }
 
-function FooterLinks({ title, items }: { title: string; items: string[] }) {
+type FooterLinkItem = {
+  label: string;
+  href: string;
+};
+
+function FooterLinks({
+  title,
+  items,
+}: {
+  title: string;
+  items: FooterLinkItem[];
+}) {
   return (
     <div>
       <h3 className="font-semibold text-[#d66eff]">{title}</h3>
       <ul className="mt-3 space-y-3 text-sm text-[#3a2467]">
         {items.map((item) => (
-          <li key={item}>
-            <a href="#inicio" className="hover:text-[#d94673]">
-              {item}
-            </a>
+          <li key={`${item.label}-${item.href}`}>
+            {item.href.startsWith("/") ? (
+              <Link to={item.href} className="hover:text-[#d94673]">
+                {item.label}
+              </Link>
+            ) : (
+              <a href={item.href} className="hover:text-[#d94673]">
+                {item.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>
